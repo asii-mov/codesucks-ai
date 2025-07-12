@@ -1,0 +1,112 @@
+# Build artifacts
+codesucks-ai
+sastsweep
+monitor
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*.test
+
+# Output directories
+results/
+findings/
+*-results/
+*-findings/
+reports/
+scans/
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+*.temp
+
+# Logs
+*.log
+debug.log
+error.log
+
+# Configuration overrides
+local.conf
+dev.conf
+test.conf
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Go specific
+vendor/
+*.cover
+*.out
+
+# Python (Semgrep)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# API keys and secrets (extra safety)
+*key*
+*secret*
+*token*
+private-key.pem
+*.pem
+
+# Large files that shouldn't be committed
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Generated documentation
+docs/_build/
+site/
+
+# Test results
+test-results/
+coverage/
+*.xml
+*.html.bak
