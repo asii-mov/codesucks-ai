@@ -27,6 +27,10 @@ type Options struct {
 	AnthropicAPIKey string
 	MinConfidence   float64
 
+	// Agent validation
+	ValidationConfidence  float64
+	NoAgentValidation    bool
+
 	// GitHub integration
 	GitHubToken         string
 	GitHubAppID         int64
@@ -119,6 +123,71 @@ type SecurityAnalysis struct {
 	Confidence    float64 `json:"confidence"`
 }
 
+// Agent Validation structures
+type AgentValidation struct {
+	IsLegitimate       bool    `json:"is_legitimate"`
+	Confidence         float64 `json:"confidence"`
+	Reasoning          string  `json:"reasoning"`
+	ContextAnalysis    string  `json:"context_analysis"`
+	RecommendedAction  string  `json:"recommended_action"`
+	FalsePositiveReason string  `json:"false_positive_reason,omitempty"`
+	ValidatedAt        string  `json:"validated_at"`
+}
+
+type RepositoryContext struct {
+	ProjectStructure    ProjectStructure          `json:"project_structure"`
+	TechnologyStack     TechnologyStack           `json:"technology_stack"`
+	SecurityPatterns    []SecurityPattern         `json:"security_patterns"`
+	FrameworkMitigations []FrameworkMitigation    `json:"framework_mitigations"`
+	DocumentationInsights []DocumentationInsight  `json:"documentation_insights"`
+}
+
+type ProjectStructure struct {
+	Language          string            `json:"language"`
+	MainEntryPoints   []string          `json:"main_entry_points"`
+	ConfigFiles       []string          `json:"config_files"`
+	TestDirectories   []string          `json:"test_directories"`
+	Documentation     []string          `json:"documentation"`
+	Dependencies      map[string]string `json:"dependencies"`
+	Architecture      string            `json:"architecture"`
+}
+
+type TechnologyStack struct {
+	Framework          string   `json:"framework"`
+	Libraries          []string `json:"libraries"`
+	DatabaseTech       []string `json:"database_tech"`
+	WebServer          string   `json:"web_server"`
+	SecurityLibraries  []string `json:"security_libraries"`
+	BuildTools         []string `json:"build_tools"`
+}
+
+type SecurityPattern struct {
+	Pattern     string `json:"pattern"`
+	Description string `json:"description"`
+	Location    string `json:"location"`
+	Confidence  float64 `json:"confidence"`
+}
+
+type FrameworkMitigation struct {
+	Framework    string `json:"framework"`
+	VulnType     string `json:"vuln_type"`
+	Mitigation   string `json:"mitigation"`
+	IsApplicable bool   `json:"is_applicable"`
+}
+
+type DocumentationInsight struct {
+	Source   string `json:"source"`
+	Content  string `json:"content"`
+	Relevance float64 `json:"relevance"`
+}
+
+// Extended Result structure with agent validation
+type ValidatedResult struct {
+	Result
+	AgentValidation *AgentValidation `json:"agent_validation,omitempty"`
+	IsFiltered      bool            `json:"is_filtered"`
+}
+
 // GitHub authentication structures
 type GitHubAuth struct {
 	Token          string
@@ -179,6 +248,8 @@ type SemgrepFinding struct {
 	StartLine          int
 	StopLine           int
 	GithubLink         string
+	AgentValidation    *AgentValidation `json:"agent_validation,omitempty"`
+	IsFiltered         bool            `json:"is_filtered,omitempty"`
 }
 
 type TruffleHogFinding struct {
@@ -202,13 +273,14 @@ type RepositoryFile struct {
 }
 
 type ScanResult struct {
-	RepoInfo        RepoInfo
-	SemgrepJson     SemgrepJson
-	TruffleHogJson  TruffleHogJson
-	ReportPath      string
-	FixesApplied    int
-	SecretsFound    int
-	Error           error
+	RepoInfo         RepoInfo
+	SemgrepJson      SemgrepJson
+	TruffleHogJson   TruffleHogJson
+	ValidatedResults []ValidatedResult
+	ReportPath       string
+	FixesApplied     int
+	SecretsFound     int
+	Error            error
 }
 
 // Constants

@@ -200,6 +200,118 @@ const htmlTemplate = `
             color: white;
         }
 
+        /* Agent validation styles */
+        .validation-section {
+            background: rgba(37, 99, 235, 0.05);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .validation-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .validation-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+        }
+
+        .validation-title {
+            font-weight: 600;
+            color: var(--primary-blue);
+            font-size: 1.1em;
+        }
+
+        .validation-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 10px;
+        }
+
+        .validation-badge.legitimate {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .validation-badge.filtered {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--error-color) 0%, var(--warning-color) 50%, var(--success-color) 100%);
+            transition: width 0.3s ease;
+        }
+
+        .confidence-text {
+            font-size: 0.9em;
+            color: var(--secondary-text);
+            margin-bottom: 8px;
+        }
+
+        .validation-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .validation-detail {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .validation-detail-title {
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .validation-detail-content {
+            color: var(--secondary-text);
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+
+        .filtered-vulnerability {
+            opacity: 0.7;
+            border-left-color: var(--secondary-text) !important;
+        }
+
+        .filtered-badge {
+            background: var(--secondary-text);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7em;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
+
         .secret-title {
             color: var(--text-color);
             font-size: 1.3em;
@@ -423,6 +535,27 @@ const htmlTemplate = `
                     <span class="number">{{len .VulnerabilityStatsOrdering}}</span>
                     <span class="label">Vulnerability Types</span>
                 </div>
+                {{$legitimateCount := 0}}
+                {{$filteredCount := 0}}
+                {{range .Findings}}
+                    {{if .AgentValidation}}
+                        {{if .AgentValidation.IsLegitimate}}
+                            {{$legitimateCount = (add $legitimateCount 1)}}
+                        {{else}}
+                            {{$filteredCount = (add $filteredCount 1)}}
+                        {{end}}
+                    {{end}}
+                {{end}}
+                {{if gt (add $legitimateCount $filteredCount) 0}}
+                <div class="summary-stat">
+                    <span class="number">{{$legitimateCount}}</span>
+                    <span class="label">Legitimate</span>
+                </div>
+                <div class="summary-stat">
+                    <span class="number">{{$filteredCount}}</span>
+                    <span class="label">Filtered</span>
+                </div>
+                {{end}}
                 <div class="summary-stat">
                     <span class="number">{{len .SecretFindings}}</span>
                     <span class="label">Secrets Found</span>
@@ -480,9 +613,12 @@ const htmlTemplate = `
             <h2 style="color: var(--primary-blue); font-size: 2em; margin-bottom: 25px; text-align: center;">Security Findings</h2>
             
             {{range .Findings}}
-            <div class="vulnerability-card severity-{{toLowerCase .Severity}}">
+            <div class="vulnerability-card severity-{{toLowerCase .Severity}}{{if .IsFiltered}} filtered-vulnerability{{end}}">
                 <div class="card-header">
-                    <div class="vulnerability-title">{{.VulnerabilityTitle}}</div>
+                    <div class="vulnerability-title">
+                        {{.VulnerabilityTitle}}
+                        {{if .IsFiltered}}<span class="filtered-badge">Filtered</span>{{end}}
+                    </div>
                     <span class="severity-badge severity-{{toLowerCase .Severity}}">{{.Severity}}</span>
                     <div class="file-path">
                         <a href="{{.GithubLink}}" target="_blank">{{.GithubLink}}</a>
@@ -491,6 +627,47 @@ const htmlTemplate = `
                 </div>
                 <div class="card-body">
                     <div class="description">{{.Description}}</div>
+                    
+                    {{if .AgentValidation}}
+                    <div class="validation-section">
+                        <div class="validation-header">
+                            <span class="validation-icon">🤖</span>
+                            <span class="validation-title">Agent Validation</span>
+                            <span class="validation-badge {{if .AgentValidation.IsLegitimate}}legitimate{{else}}filtered{{end}}">
+                                {{if .AgentValidation.IsLegitimate}}Legitimate{{else}}False Positive{{end}}
+                            </span>
+                        </div>
+                        
+                        <div class="confidence-text">
+                            Confidence: {{printf "%.0f" (mul .AgentValidation.Confidence 100)}}%
+                        </div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: {{printf "%.0f" (mul .AgentValidation.Confidence 100)}}%"></div>
+                        </div>
+                        
+                        <div class="validation-details">
+                            <div class="validation-detail">
+                                <div class="validation-detail-title">Analysis</div>
+                                <div class="validation-detail-content">{{.AgentValidation.Reasoning}}</div>
+                            </div>
+                            <div class="validation-detail">
+                                <div class="validation-detail-title">Context Analysis</div>
+                                <div class="validation-detail-content">{{.AgentValidation.ContextAnalysis}}</div>
+                            </div>
+                            {{if .AgentValidation.FalsePositiveReason}}
+                            <div class="validation-detail">
+                                <div class="validation-detail-title">False Positive Reason</div>
+                                <div class="validation-detail-content">{{.AgentValidation.FalsePositiveReason}}</div>
+                            </div>
+                            {{end}}
+                            <div class="validation-detail">
+                                <div class="validation-detail-title">Recommended Action</div>
+                                <div class="validation-detail-content">{{.AgentValidation.RecommendedAction}}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {{end}}
+                    
                     <div class="code-container">
                         <div class="code-header">Vulnerable Code</div>
                         <div class="code-content">

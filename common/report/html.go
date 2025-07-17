@@ -30,6 +30,9 @@ func GenerateHTML(reportData *common.ReportData, outDir string) (string, error) 
 		"toLowerCase": toLowerCase,
 		"getSeverity": getSeverity,
 		"getFileType": getFileType,
+		"mul": func(a, b float64) float64 { return a * b },
+		"add": func(a, b int) int { return a + b },
+		"gt": func(a, b int) bool { return a > b },
 	})
 
 	// Parse the template
@@ -82,6 +85,50 @@ func ConvertSemgrepToReport(target string, semgrepJson *common.SemgrepJson) *com
 			StartLine:          result.Start.Line,
 			StopLine:           result.End.Line,
 			GithubLink:         generateGitHubLink(target, result.Path, result.Start.Line, result.End.Line),
+		}
+		findings = append(findings, finding)
+	}
+
+	// Sort findings by severity and vulnerability type
+	SortFindings(findings)
+
+	// Calculate statistics
+	vulnStats, vulnOrdering, severityStats := CalculateMetrics(findings)
+
+	return &common.ReportData{
+		Target:                     target,
+		VulnerabilityStats:         vulnStats,
+		VulnerabilityStatsOrdering: vulnOrdering,
+		SeverityStats:              severityStats,
+		SeverityStatsOrdering:      []string{"CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"},
+		Findings:                   findings,
+	}
+}
+
+// ConvertValidatedResultsToReport converts validated results to report format
+func ConvertValidatedResultsToReport(target string, validatedResults []common.ValidatedResult) *common.ReportData {
+	var findings []common.SemgrepFinding
+
+	// Convert validated results to report findings
+	for _, validatedResult := range validatedResults {
+		result := validatedResult.Result
+		
+		// Skip informational findings (only include HIGH, MEDIUM, LOW severity)
+		severity := strings.ToUpper(result.Extra.Metadata.Impact)
+		if severity != "HIGH" && severity != "MEDIUM" && severity != "LOW" {
+			continue
+		}
+
+		finding := common.SemgrepFinding{
+			VulnerabilityTitle: cleanVulnerabilityTitle(result.CheckID),
+			Severity:           getSeverityFromResult(result),
+			Description:        result.Extra.Message,
+			Code:               result.Extra.Lines,
+			StartLine:          result.Start.Line,
+			StopLine:           result.End.Line,
+			GithubLink:         generateGitHubLink(target, result.Path, result.Start.Line, result.End.Line),
+			AgentValidation:    validatedResult.AgentValidation,
+			IsFiltered:         validatedResult.IsFiltered,
 		}
 		findings = append(findings, finding)
 	}

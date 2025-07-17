@@ -21,7 +21,7 @@ func ParseOptions() (*common.Options, error) {
 	// Scanning configuration
 	flag.BoolVar(&options.NoSemgrep, "no-semgrep", false, "Skip Semgrep static analysis")
 	flag.StringVar(&options.SemgrepPath, "semgrep-path", "semgrep", "Path to semgrep binary")
-	flag.StringVar(&options.ConfigPath, "config", "auto", "Semgrep config path or preset (basic, comprehensive, security-focused, compliance)")
+	flag.StringVar(&options.ConfigPath, "config", "comprehensive", "Semgrep config path or preset (basic, comprehensive, security-focused, compliance)")
 	flag.BoolVar(&options.NoTruffleHog, "no-trufflehog", false, "Skip TruffleHog secret scanning")
 	flag.StringVar(&options.TruffleHogPath, "trufflehog-path", "trufflehog", "Path to trufflehog binary")
 	flag.BoolVar(&options.VerifySecrets, "verify-secrets", false, "Only return verified secrets from TruffleHog")
@@ -38,6 +38,10 @@ func ParseOptions() (*common.Options, error) {
 	flag.StringVar(&options.AIModel, "ai-model", common.DefaultModel, "Claude AI model to use")
 	flag.StringVar(&options.AnthropicAPIKey, "anthropic-key", "", "Anthropic API key (or use ANTHROPIC_API_KEY env var)")
 	flag.Float64Var(&options.MinConfidence, "min-confidence", 0.8, "Minimum confidence threshold for AI fixes (0.0-1.0)")
+
+	// Agent validation
+	flag.Float64Var(&options.ValidationConfidence, "validation-confidence", 0.7, "Minimum confidence threshold for agent validation (0.0-1.0)")
+	flag.BoolVar(&options.NoAgentValidation, "no-agent-validation", false, "Disable agent validation (default: enabled)")
 
 	// GitHub integration
 	flag.StringVar(&options.GitHubToken, "github-token", "", "GitHub personal access token (or use GITHUB_TOKEN env var)")
@@ -122,13 +126,18 @@ func validateOptions(options *common.Options) error {
 	}
 
 	// AI features require Anthropic API key
-	if (options.AutoFix || options.CreatePR || options.CreateIssue) && options.AnthropicAPIKey == "" {
+	if (options.AutoFix || options.CreatePR || options.CreateIssue || !options.NoAgentValidation) && options.AnthropicAPIKey == "" {
 		return fmt.Errorf("AI features require Anthropic API key")
 	}
 
 	// Validate confidence threshold
 	if options.MinConfidence < 0.0 || options.MinConfidence > 1.0 {
 		return fmt.Errorf("min-confidence must be between 0.0 and 1.0")
+	}
+
+	// Validate validation confidence threshold
+	if options.ValidationConfidence < 0.0 || options.ValidationConfidence > 1.0 {
+		return fmt.Errorf("validation-confidence must be between 0.0 and 1.0")
 	}
 
 	// Validate thread count
@@ -173,7 +182,7 @@ func printUsage() {
 	fmt.Println("SCANNING OPTIONS:")
 	fmt.Println("  -no-semgrep         Skip Semgrep static analysis")
 	fmt.Println("  -semgrep-path string Path to semgrep binary (default \"semgrep\")")
-	fmt.Println("  -config string      Semgrep config path or preset (default \"auto\")")
+	fmt.Println("  -config string      Semgrep config path or preset (default \"comprehensive\")")
 	fmt.Println("  -no-trufflehog      Skip TruffleHog secret scanning")
 	fmt.Println("  -trufflehog-path string Path to trufflehog binary (default \"trufflehog\")")
 	fmt.Println("  -verify-secrets     Only return verified secrets from TruffleHog")
@@ -187,6 +196,10 @@ func printUsage() {
 	fmt.Println("  -ai-model string    Claude AI model to use (default \"claude-3-5-sonnet-20241022\")")
 	fmt.Println("  -anthropic-key string Anthropic API key (or use ANTHROPIC_API_KEY env var)")
 	fmt.Println("  -min-confidence float Minimum confidence threshold for AI fixes (default 0.8)")
+	fmt.Println()
+	fmt.Println("AGENT VALIDATION OPTIONS:")
+	fmt.Println("  -validation-confidence float Minimum confidence threshold for agent validation (default 0.7)")
+	fmt.Println("  -no-agent-validation         Disable agent validation (default: enabled)")
 	fmt.Println()
 	fmt.Println("GITHUB AUTHENTICATION:")
 	fmt.Println("  -github-token string    GitHub personal access token (or use GITHUB_TOKEN env var)")

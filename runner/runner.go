@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/asii-mov/codesucks-ai/common"
+	"github.com/asii-mov/codesucks-ai/common/agent"
 	"github.com/asii-mov/codesucks-ai/common/ai"
 	"github.com/asii-mov/codesucks-ai/common/github"
 	"github.com/asii-mov/codesucks-ai/common/report"
@@ -115,6 +116,33 @@ func scanTarget(target string, options *common.Options) (*common.ScanResult, err
 		result.TruffleHogJson = *trufflehogJson
 	}
 
+	// Apply agent validation by default (unless explicitly disabled) when vulnerabilities found
+	var validatedResults []common.ValidatedResult
+	if !options.NoAgentValidation && !options.NoSemgrep && len(semgrepJson.Results) > 0 {
+		fmt.Printf("🤖 Agent validation enabled - analyzing vulnerabilities for false positives\n")
+		validatedResults, err = executeAgentValidation(target, semgrepJson, sourcePath, options, githubClient)
+		if err != nil {
+			fmt.Printf("Warning: Agent validation failed: %v\n", err)
+			// Continue with original results if validation fails
+			validatedResults = convertToValidatedResults(semgrepJson.Results)
+		}
+	} else {
+		// Agent validation disabled, use original results
+		if options.NoAgentValidation {
+			fmt.Printf("ℹ️ Agent validation disabled - using raw scanner results\n")
+		}
+		validatedResults = convertToValidatedResults(semgrepJson.Results)
+	}
+
+	// Filter validated results based on confidence threshold
+	filteredResults := filterValidatedResults(validatedResults, options)
+	
+	// Store validated results in scan result
+	result.ValidatedResults = filteredResults
+	
+	// Update semgrepJson with filtered results for subsequent processing
+	semgrepJson.Results = extractOriginalResults(filteredResults)
+
 	// Execute auto-fix workflow if enabled and vulnerabilities found
 	if options.AutoFix && !options.NoSemgrep && len(semgrepJson.Results) > 0 {
 		fixesApplied, err := executeAutoFixWorkflow(target, semgrepJson, sourcePath, options)
@@ -128,7 +156,7 @@ func scanTarget(target string, options *common.Options) (*common.ScanResult, err
 	// Generate HTML report combining Semgrep and TruffleHog results
 	var reportData *common.ReportData
 	if !options.NoSemgrep {
-		reportData = report.ConvertSemgrepToReport(target, semgrepJson)
+		reportData = report.ConvertValidatedResultsToReport(target, filteredResults)
 	} else {
 		// Create empty report data if only TruffleHog is running
 		reportData = &common.ReportData{
@@ -302,7 +330,25 @@ func displayScanResults(target string, result *common.ScanResult, options *commo
 	fmt.Printf("├─ Private: %v\n", result.RepoInfo.Private)
 
 	if !options.NoSemgrep {
-		fmt.Printf("├─ Vulnerabilities Found: %d\n", len(result.SemgrepJson.Results))
+		totalVulns := len(result.SemgrepJson.Results)
+		fmt.Printf("├─ Vulnerabilities Found: %d\n", totalVulns)
+		
+		if len(result.ValidatedResults) > 0 {
+			legitimateCount := 0
+			filteredCount := 0
+			for _, vr := range result.ValidatedResults {
+				if vr.IsFiltered {
+					filteredCount++
+				} else {
+					legitimateCount++
+				}
+			}
+			
+			if !options.NoAgentValidation {
+				fmt.Printf("├─ Agent Validation: %d legitimate, %d filtered\n", legitimateCount, filteredCount)
+			}
+		}
+		
 		if result.FixesApplied > 0 {
 			fmt.Printf("├─ Auto-fixes Applied: %d\n", result.FixesApplied)
 		}
@@ -337,6 +383,11 @@ func RunScanner(targets []string, options *common.Options) error {
 	if options.AutoFix {
 		fmt.Printf("🤖 AI auto-fix enabled (min confidence: %.2f)\n", options.MinConfidence)
 	}
+	if !options.NoAgentValidation {
+		fmt.Printf("🤖 Agent validation enabled - vulnerabilities will be analyzed for false positives\n")
+	} else {
+		fmt.Printf("⚠️ Agent validation disabled - raw scanner results will be used\n")
+	}
 	fmt.Println()
 
 	// Set up channels for concurrent processing
@@ -367,4 +418,130 @@ func RunScanner(targets []string, options *common.Options) error {
 
 	fmt.Println("✅ Scanning completed!")
 	return nil
+}
+
+// executeAgentValidation performs agent validation on the scan results
+func executeAgentValidation(target string, semgrepJson *common.SemgrepJson, sourcePath string, options *common.Options, githubClient *github.GitHubClient) ([]common.ValidatedResult, error) {
+	fmt.Printf("🤖 Starting agent validation for %s\n", target)
+
+	// Parse repository URL
+	owner, repo, err := github.ParseRepositoryURL(target)
+	if err != nil {
+		return nil, err
+	}
+
+	// Initialize agent validator
+	agentValidator := agent.NewAgentValidator(options.AnthropicAPIKey, githubClient, options.Debug)
+
+	// Familiarize agent with repository
+	repoInfo, err := githubClient.GetRepositoryInfo(owner, repo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repository info: %w", err)
+	}
+
+	_, err = agentValidator.FamiliarizeWithRepository(owner, repo, repoInfo.Branch, sourcePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to familiarize with repository: %w", err)
+	}
+
+	var validatedResults []common.ValidatedResult
+	totalVulnerabilities := len(semgrepJson.Results)
+
+	fmt.Printf("🔍 Validating %d vulnerabilities...\n", totalVulnerabilities)
+
+	for i, result := range semgrepJson.Results {
+		if options.Debug {
+			fmt.Printf("🤖 Agent: Validating %d/%d: %s\n", i+1, totalVulnerabilities, result.CheckID)
+		}
+
+		// Validate vulnerability
+		validation, err := agentValidator.ValidateVulnerability(result, sourcePath)
+		if err != nil {
+			if options.Debug {
+				fmt.Printf("❌ Validation failed for %s: %v\n", result.CheckID, err)
+			}
+			// If validation fails, keep the original result without filtering
+			validatedResults = append(validatedResults, common.ValidatedResult{
+				Result:     result,
+				IsFiltered: false,
+			})
+			continue
+		}
+
+		// Create validated result
+		validatedResult := common.ValidatedResult{
+			Result:          result,
+			AgentValidation: validation,
+			IsFiltered:      !validation.IsLegitimate || validation.Confidence < options.ValidationConfidence,
+		}
+
+		validatedResults = append(validatedResults, validatedResult)
+
+		if options.Debug {
+			status := "✅ LEGITIMATE"
+			if validatedResult.IsFiltered {
+				status = "❌ FILTERED"
+			}
+			fmt.Printf("   Result: %s (confidence: %.2f)\n", status, validation.Confidence)
+		}
+	}
+
+	// Display summary
+	legitimateCount := 0
+	filteredCount := 0
+	for _, vr := range validatedResults {
+		if vr.IsFiltered {
+			filteredCount++
+		} else {
+			legitimateCount++
+		}
+	}
+
+	fmt.Printf("🎯 Agent validation complete:\n")
+	fmt.Printf("├─ Total vulnerabilities analyzed: %d\n", totalVulnerabilities)
+	fmt.Printf("├─ Legitimate vulnerabilities: %d\n", legitimateCount)
+	fmt.Printf("├─ False positives filtered: %d\n", filteredCount)
+	
+	if totalVulnerabilities > 0 {
+		falsePositiveRate := float64(filteredCount) / float64(totalVulnerabilities) * 100
+		fmt.Printf("└─ False positive rate: %.1f%%\n", falsePositiveRate)
+	}
+
+	return validatedResults, nil
+}
+
+// convertToValidatedResults converts regular results to validated results without agent validation
+func convertToValidatedResults(results []common.Result) []common.ValidatedResult {
+	var validatedResults []common.ValidatedResult
+	for _, result := range results {
+		validatedResults = append(validatedResults, common.ValidatedResult{
+			Result:     result,
+			IsFiltered: false, // No filtering without agent validation
+		})
+	}
+	return validatedResults
+}
+
+// filterValidatedResults filters validated results based on configuration
+func filterValidatedResults(validatedResults []common.ValidatedResult, options *common.Options) []common.ValidatedResult {
+	if options.NoAgentValidation {
+		return validatedResults
+	}
+
+	var filtered []common.ValidatedResult
+	for _, vr := range validatedResults {
+		if !vr.IsFiltered {
+			filtered = append(filtered, vr)
+		}
+	}
+	return filtered
+}
+
+// extractOriginalResults extracts original Result objects from ValidatedResult
+func extractOriginalResults(validatedResults []common.ValidatedResult) []common.Result {
+	var results []common.Result
+	for _, vr := range validatedResults {
+		results = append(results, vr.Result)
+	}
+	return results
 }
