@@ -1,262 +1,240 @@
-# codesucks-ai 🔒
+# codesucks-ai
 
-**AI-Powered Security Analysis Tool** - Advanced static analysis with automated vulnerability fixes
+AI-Powered Security Analysis Tool with Advanced Orchestration
 
-[![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)](https://golang.org/)
-[![License](https://img.shields.io/badge/license-%20%20GNU%20GPLv3%20-green)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Go Version](https://img.shields.io/badge/Go-1.21+-blue.svg)](https://golang.org/)
+[![Docker](https://img.shields.io/badge/Docker-Supported-blue.svg)](https://www.docker.com/)
 
 ## Overview
 
-codesucks-ai is a comprehensive security analysis tool that combines static code analysis with AI-powered vulnerability remediation and secret detection. Built as an independent alternative to codesucks-ai, it scans repositories via GitHub API (no cloning required) and provides automated fixes using Claude AI.
+codesucks-ai is a comprehensive security analysis tool that combines static code analysis (SAST) with AI-powered vulnerability detection and remediation. It uses Claude AI to provide intelligent analysis, reduce false positives, and automatically generate secure code fixes.
 
-## ✨ Features
+## Features
 
-- 🔍 **Static Analysis**: Powered by Semgrep with configurable rulesets
-- 🔐 **Secret Detection**: TruffleHog integration for comprehensive secret scanning
-- 🤖 **AI Auto-Fix**: Claude AI generates fixes for detected vulnerabilities  
-- 🔄 **GitHub Integration**: Automatic PR creation with fixes
-- 📊 **Rich Reports**: Unified HTML reports with vulnerabilities and secrets
-- ⚡ **No Repository Cloning**: Uses GitHub API for direct file access
-- 🛠️ **Configurable Presets**: Multiple security scanning configurations
-- ✅ **Secret Verification**: Validates found secrets to confirm active threats
-- 📝 **Issue Creation**: Automatic GitHub issue generation
-- 🧵 **Concurrent Processing**: Multi-threaded scanning for performance
+### Three-Layer Analysis Architecture
 
-## 🚀 Quick Start
+1. **Static Analysis** - Traditional SAST scanning powered by Semgrep with configurable rulesets
+2. **Secret Detection** - TruffleHog integration for finding exposed credentials and API keys
+3. **AI Deep Analysis** - Eight specialized security agents for advanced vulnerability detection
+
+### Core Capabilities
+
+- Intelligent false positive reduction using repository context analysis
+- Automated vulnerability fixes with GitHub pull request creation
+- Comprehensive HTML reports with executive summaries
+- Docker containerization for secure, isolated execution
+- Flexible YAML-based configuration system
+
+## Quick Start
+
+### Prerequisites
+
+- Go 1.21 or higher
+- Python 3 (required for Semgrep)
+- Docker (optional, for containerized execution)
+- GitHub Personal Access Token
+- Anthropic API Key
 
 ### Installation
 
-1. **Install Dependencies**:
-   ```bash
-   # Install Semgrep
-   python3 -m pip install --user semgrep
-   
-   # Install TruffleHog (choose one method)
-   brew install trufflehog  # macOS
-   # OR download binary from https://github.com/trufflesecurity/trufflehog/releases
-   
-   # Clone the repository
-   git clone https://github.com/asii-mov/codesucks-ai.git
-   cd codesucks-ai
-   ```
+```bash
+# Clone the repository
+git clone https://github.com/your-org/codesucks-ai.git
+cd codesucks-ai
 
-2. **Build the Tool**:
-   ```bash
-   go build -o codesucks-ai ./cmd/codesucks-ai
-   ```
+# Build the project
+cd src && make build
+
+# Install dependencies
+make deps
+```
+
+### Environment Setup
+
+Set the following environment variables:
+
+```bash
+export GITHUB_TOKEN="github_pat_your_token_here"
+export ANTHROPIC_API_KEY="sk-ant-api03-your_key_here"
+```
 
 ### Basic Usage
 
 ```bash
-# Quick scan with shell script
-./run-codesucks-ai.sh \
-  -g $GITHUB_TOKEN \
-  -a $ANTHROPIC_API_KEY \
-  -r https://github.com/owner/repo
+# Standard security scan (SAST + Secret detection)
+./build/codesucks-ai -repo https://github.com/owner/repo
 
-# Direct binary usage
-./codesucks-ai \
-  -github-token $GITHUB_TOKEN \
-  -anthropic-key $ANTHROPIC_API_KEY \
-  -repo https://github.com/owner/repo
+# Full analysis with AI-powered deep scanning
+./build/codesucks-ai -repo https://github.com/owner/repo -orchestrator-mode
+
+# Using configuration file (recommended)
+./build/codesucks-ai -config-file configs/comprehensive.yaml
 ```
 
-### Configuration Presets
+## Configuration
 
-View available presets:
-```bash
-./run-codesucks-ai.sh --list-presets
+### Using YAML Configuration Files
+
+Create a configuration file to customize the analysis:
+
+```yaml
+target:
+  repo: "https://github.com/owner/repo"
+
+scanning:
+  semgrep:
+    enabled: true
+    config: "comprehensive"
+  trufflehog:
+    enabled: true
+    verify_secrets: true
+
+ai_automation:
+  enabled: true
+  auto_fix: true
+  create_pr: true
+
+orchestrator:
+  enabled: true
+  agents_dir: "./agents"
+  session_dir: "./sessions"
+
+performance:
+  threads: 10
+  output_dir: "./results"
 ```
 
-Use specific presets:
-```bash
-# Fast scanning
-./run-codesucks-ai.sh -c basic -g $GITHUB_TOKEN -r https://github.com/owner/repo
+### Available Configuration Presets
 
-# Comprehensive analysis
-./run-codesucks-ai.sh -c comprehensive -g $GITHUB_TOKEN -r https://github.com/owner/repo
+- `comprehensive.yaml` - Complete analysis with all security layers
+- `security-focused.yaml` - High-confidence security-prioritized scanning
+- `orchestrator.yaml` - AI deep analysis configuration
+- `enterprise.yaml` - Compliance-focused with conservative settings
+- `batch-processing.yaml` - Optimized for analyzing multiple repositories
 
-# Security-focused
-./run-codesucks-ai.sh -c security-focused -g $GITHUB_TOKEN -r https://github.com/owner/repo
+## Advanced Features
 
-# Secret scanning with verification
-./codesucks-ai -repo https://github.com/owner/repo -verify-secrets -github-token $GITHUB_TOKEN
+### AI Orchestrator Mode
 
-# Only secret scanning (skip Semgrep)
-./codesucks-ai -repo https://github.com/owner/repo -no-semgrep -github-token $GITHUB_TOKEN
-```
+The orchestrator mode enables deep security analysis using eight specialized AI agents:
 
-## 📋 Configuration Presets
+1. **Injection Analyzer** - SQL, NoSQL, LDAP, and OS command injection detection
+2. **XSS Analyzer** - Reflected, stored, and DOM-based cross-site scripting
+3. **Path Traversal Analyzer** - File inclusion and directory traversal vulnerabilities
+4. **Cryptographic Analyzer** - Weak algorithms and implementation flaws
+5. **Authentication Analyzer** - Authentication bypass and session management issues
+6. **Deserialization Analyzer** - Insecure deserialization patterns
+7. **XXE Analyzer** - XML external entity vulnerabilities
+8. **Race Condition Analyzer** - Concurrency and threading issues
 
-| Preset | Description | Rules |
-|--------|-------------|-------|
-| **basic** | Minimal ruleset for fast scanning | p/trailofbits |
-| **codesucks-ai** | Default balanced configuration | p/trailofbits + p/security-audit + p/secrets |
-| **security-focused** | Security vulnerabilities and secrets | p/security-audit + p/secrets + p/owasp-top-ten |
-| **comprehensive** | Maximum coverage | All available rulesets |
-| **compliance** | Enterprise compliance focused | p/cwe-top-25 + p/supply-chain + p/security-audit |
-
-## 🔐 Secret Scanning
-
-codesucks-ai integrates TruffleHog for comprehensive secret detection alongside vulnerability scanning.
-
-### Supported Secret Types
-
-TruffleHog can detect 800+ secret types including:
-- **Cloud Providers**: AWS keys, GCP keys, Azure credentials
-- **Development Platforms**: GitHub tokens, GitLab tokens, Docker Hub
-- **Communication**: Slack tokens, Discord webhooks
-- **Payment**: Stripe API keys, PayPal credentials
-- **AI Services**: OpenAI keys, Anthropic keys, Hugging Face tokens
-- **Databases**: PostgreSQL, MySQL, MongoDB connection strings
-- **And many more...**
-
-### Secret Scanning Modes
-
-```bash
-# Complete security scan (vulnerabilities + secrets)
-./codesucks-ai -repo https://github.com/owner/repo -github-token $GITHUB_TOKEN
-
-# Only verified secrets (reduces false positives)
-./codesucks-ai -repo https://github.com/owner/repo -verify-secrets -github-token $GITHUB_TOKEN
-
-# Only secret scanning (skip static analysis)
-./codesucks-ai -repo https://github.com/owner/repo -no-semgrep -github-token $GITHUB_TOKEN
-
-# Custom TruffleHog binary path
-./codesucks-ai -repo https://github.com/owner/repo -trufflehog-path /path/to/trufflehog -github-token $GITHUB_TOKEN
-```
-
-### Understanding Secret Verification
-
-- **✅ Verified**: Secret is confirmed active and poses immediate risk
-- **⚠️ Unverified**: Potential secret found but not confirmed active
-- **Secret Types**: Automatically classified (Private Key, API Key, etc.)
-- **Location Details**: Exact file path and line number provided
-
-## 🔧 Advanced Usage
-
-### AI Auto-Fix with PR Creation
+To run with orchestrator mode:
 
 ```bash
-./run-codesucks-ai.sh \
-  -g $GITHUB_TOKEN \
-  -a $ANTHROPIC_API_KEY \
-  -r https://github.com/owner/repo \
-  --auto-fix \
-  --create-pr \
-  -c comprehensive
+# Using the main binary
+./build/codesucks-ai -repo https://github.com/owner/repo -orchestrator-mode
+
+# Using the convenience script
+./scripts/run-orchestrator.sh -r https://github.com/owner/repo
+
+# With Docker isolation
+./scripts/run-orchestrator.sh -r https://github.com/owner/repo --docker
 ```
 
-### Multiple Repository Scanning
+### Docker Execution
+
+Run the tool in a containerized environment for enhanced security:
 
 ```bash
-# Create repos.txt with one repository URL per line
-echo "https://github.com/owner/repo1" > repos.txt
-echo "https://github.com/owner/repo2" >> repos.txt
+# Build Docker image
+cd src && make docker-build
 
-./codesucks-ai \
-  -repos repos.txt \
-  -github-token $GITHUB_TOKEN \
-  -anthropic-key $ANTHROPIC_API_KEY
+# Run with Docker Compose
+docker-compose -f docker/docker-compose.orchestrator.yml up
+
+# Or use the runner script
+./scripts/run-orchestrator.sh -r https://github.com/owner/repo --docker
 ```
 
-### Custom Configuration
+## Project Structure
+
+```
+codesucks-ai/
+├── src/                    # Go source code
+│   ├── cmd/               # Main application entry points
+│   ├── common/            # Shared libraries and utilities
+│   ├── runner/            # CLI and execution logic
+│   └── Makefile          # Build automation
+├── agents/                # Security analysis agent specifications
+├── configs/               # YAML configuration templates
+├── docs/                  # Documentation
+├── scripts/               # Automation and helper scripts
+├── docker/                # Docker configuration files
+└── build/                 # Compiled binaries (gitignored)
+```
+
+## Development
+
+### Building from Source
 
 ```bash
-# Create custom.conf
-echo "FLAGS=--config p/security-audit --config p/secrets --timeout 600" > custom.conf
-
-./codesucks-ai \
-  -config ./custom.conf \
-  -repo https://github.com/owner/repo \
-  -github-token $GITHUB_TOKEN
+cd src
+make build      # Build binary
+make test       # Run tests
+make lint       # Run linters
+make clean      # Clean build artifacts
+make all        # Complete build pipeline
 ```
 
-## 📊 Output
-
-codesucks-ai generates comprehensive HTML reports including:
-
-- **Executive Summary**: High-level statistics for vulnerabilities and secrets
-- **Vulnerability Details**: Code snippets, severity levels, and descriptions
-- **Secret Findings**: Detected secrets with verification status and types
-- **AI Fix Suggestions**: Automated remediation recommendations
-- **GitHub Integration**: Direct links to affected files and secret locations
-
-Reports are saved to the output directory (default: `./results/`).
-
-## 🔑 Authentication
-
-### GitHub Personal Access Token
+### Testing
 
 ```bash
-export GITHUB_TOKEN="github_pat_xxxxxxxxxxxxx"
+# Run unit tests
+cd src && make test
+
+# Test orchestrator implementation
+./scripts/test-orchestrator.sh
+
+# Run example scan
+cd src && make run-example
+
+# Performance benchmarking
+cd src && make benchmark
 ```
 
-Required scopes: `repo`, `pull_request` (for PR creation)
+## Documentation
 
-### GitHub App (Enterprise)
+- [Orchestrator Mode Guide](docs/ORCHESTRATOR-MODE.md) - Detailed orchestrator documentation
+- [YAML Configuration Reference](docs/YAML-CONFIG.md) - Complete configuration options
+- [Examples](docs/EXAMPLES.md) - Usage examples and patterns
+- [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
 
-```bash
-export GITHUB_APP_ID="123456"
-export GITHUB_APP_PRIVATE_KEY="/path/to/private-key.pem"
-```
+## Security Considerations
 
-### Claude AI
+- This tool is designed exclusively for defensive security testing and remediation
+- Never commit API keys or tokens to version control
+- AI analysis runs in isolated Docker containers when using Docker mode
+- Configure appropriate resource limits for your environment
+- Agent configurations are mounted as read-only for security
 
-```bash
-export ANTHROPIC_API_KEY="sk-ant-api03-xxxxxxxxxxxxx"
-```
+## Contributing
 
-## 🛠️ CLI Options
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes (`git commit -m 'Add your feature'`)
+4. Push to the branch (`git push origin feature/your-feature`)
+5. Open a Pull Request
 
-```
-TARGET OPTIONS:
-  -repo string        Single repository URL to scan
-  -repos string       File containing list of repository URLs
+## License
 
-SCANNING OPTIONS:
-  -config string      Configuration preset or path (default: codesucks-ai)
-  -list-presets       List available configuration presets
-  -no-semgrep         Skip Semgrep static analysis
-  -semgrep-path string Path to semgrep binary
-  -no-trufflehog      Skip TruffleHog secret scanning
-  -trufflehog-path string Path to trufflehog binary
-  -verify-secrets     Only return verified secrets from TruffleHog
-  -out string         Output directory (default: ./results)
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-AI AUTOMATION:
-  -auto-fix           Enable AI-powered vulnerability fixes
-  -create-pr          Create pull request with fixes
-  -create-issue       Create GitHub issue for vulnerabilities
-  -anthropic-key string Anthropic API key
+## Support
 
-GITHUB AUTHENTICATION:
-  -github-token string GitHub personal access token
-  -github-app-id int   GitHub App ID
-  -github-app-key string GitHub App private key file
-
-PERFORMANCE:
-  -threads int        Concurrent scanning threads (default: 10)
-  -debug              Enable debug logging
-```
-
-## 📖 Documentation
-
-- [Configuration Guide](docs/CONFIGURATION.md)
-- [Examples](docs/EXAMPLES.md)
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
-- [Development Guide](docs/blueprint.md)
-
-## NodeGoat Testing
-
-For comprehensive testing and validation, we used [NodeGoat-AI-test](https://github.com/asii-mov/NodeGoat-AI-test) - a deliberately vulnerable Node.js application. You can view the automated pull request fixes and security improvements generated by codesucks-ai in that repository.
-
-## 🙏 Acknowledgments
-
-- [SASTSweep](https://github.com/chebuya/sastsweep) Inspired by cheb
-- [Semgrep](https://semgrep.dev/) for static analysis engine
-- [TruffleHog](https://trufflesecurity.com/trufflehog) for comprehensive secret detection
-- [Anthropic Claude](https://anthropic.com/) for AI-powered fixes
+- Documentation: [docs/](docs/)
+- Issues: [GitHub Issues](https://github.com/your-org/codesucks-ai/issues)
+- Releases: [GitHub Releases](https://github.com/your-org/codesucks-ai/releases)
 
 ---
+
+Built for security researchers and developers to identify and remediate vulnerabilities in their codebases.
