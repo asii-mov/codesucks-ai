@@ -39,12 +39,12 @@ type AgentProcess struct {
 
 // AgentConfig represents the configuration for a Claude Code sub-agent
 type AgentConfig struct {
-	Name        string   `yaml:"name"`
-	Description string   `yaml:"description"`
-	Tools       []string `yaml:"tools"`
+	Name         string   `yaml:"name"`
+	Description  string   `yaml:"description"`
+	Tools        []string `yaml:"tools"`
 	SystemPrompt string   `yaml:"system_prompt"`
-	MaxTokens   int      `yaml:"max_tokens,omitempty"`
-	Model       string   `yaml:"model,omitempty"`
+	MaxTokens    int      `yaml:"max_tokens,omitempty"`
+	Model        string   `yaml:"model,omitempty"`
 }
 
 // NewClaudeSDKClient creates a new Claude Code SDK client wrapper
@@ -89,14 +89,14 @@ func (c *ClaudeSDKClient) CreateAgentSession(agentType, analysisID string, files
 
 	// Initialize agent state
 	agentState := common.AgentState{
-		AgentID:     agentID,
-		AgentType:   agentType,
-		AnalysisID:  analysisID,
-		Status:      "pending",
-		Files:       files,
-		StartTime:   time.Now(),
-		Progress:    0,
-		Results:     []common.SecurityFinding{},
+		AgentID:    agentID,
+		AgentType:  agentType,
+		AnalysisID: analysisID,
+		Status:     "pending",
+		Files:      files,
+		StartTime:  time.Now(),
+		Progress:   0,
+		Results:    []common.SecurityFinding{},
 	}
 
 	stateData, err := json.MarshalIndent(agentState, "", "  ")
@@ -128,7 +128,7 @@ func (c *ClaudeSDKClient) CreateAgentSession(agentType, analysisID string, files
 // SpawnAgent starts a Claude Code sub-agent process for security analysis
 func (c *ClaudeSDKClient) SpawnAgent(agent *AgentProcess, codebaseContext *common.RepositoryContext) error {
 	agentConfigPath := filepath.Join(c.AgentsDir, fmt.Sprintf("%s.md", agent.Type))
-	
+
 	// Check if agent configuration exists
 	if _, err := os.Stat(agentConfigPath); os.IsNotExist(err) {
 		// Create default agent configuration
@@ -171,8 +171,8 @@ func (c *ClaudeSDKClient) SpawnAgent(agent *AgentProcess, codebaseContext *commo
 
 	// Update agent state
 	if err := c.updateAgentState(agent.ID, map[string]interface{}{
-		"status":    "running",
-		"pid":       cmd.Process.Pid,
+		"status":     "running",
+		"pid":        cmd.Process.Pid,
 		"started_at": time.Now(),
 	}); err != nil {
 		return fmt.Errorf("failed to update agent state: %w", err)
@@ -264,7 +264,7 @@ func (c *ClaudeSDKClient) MonitorAgent(agentID string) (*common.AgentStatus, err
 		return nil, fmt.Errorf("failed to read agent state: %w", err)
 	}
 
-	var state common.AgentState  
+	var state common.AgentState
 	if err := json.Unmarshal(stateData, &state); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal agent state: %w", err)
 	}
@@ -283,21 +283,21 @@ func (c *ClaudeSDKClient) MonitorAgent(agentID string) (*common.AgentStatus, err
 	}
 
 	status := &common.AgentStatus{
-		AgentID:        agentID,
-		Type:           agent.Type,
-		Status:         processStatus,
-		Progress:       state.Progress,
-		FilesAnalyzed:  len(state.FilesProcessed),
-		TotalFiles:     len(agent.Files),
+		AgentID:         agentID,
+		Type:            agent.Type,
+		Status:          processStatus,
+		Progress:        state.Progress,
+		FilesAnalyzed:   len(state.FilesProcessed),
+		TotalFiles:      len(agent.Files),
 		Vulnerabilities: len(state.Results),
-		StartTime:      agent.StartTime,
-		LastUpdate:     state.LastUpdate,
+		StartTime:       agent.StartTime,
+		LastUpdate:      state.LastUpdate,
 	}
 
 	return status, nil
 }
 
-// CollectResults gathers the analysis results from a completed agent  
+// CollectResults gathers the analysis results from a completed agent
 func (c *ClaudeSDKClient) CollectResults(agentID string) (*common.AgentResults, error) {
 	c.mu.RLock()
 	agent, exists := c.activeAgents[agentID]
@@ -308,13 +308,13 @@ func (c *ClaudeSDKClient) CollectResults(agentID string) (*common.AgentResults, 
 	}
 
 	resultsFile := filepath.Join(agent.SessionPath, "results.json")
-	
+
 	// Check if results file exists
 	if _, err := os.Stat(resultsFile); os.IsNotExist(err) {
 		return &common.AgentResults{
 			AgentID:         agentID,
-			Type:           agent.Type,
-			Status:         "no_results",
+			Type:            agent.Type,
+			Status:          "no_results",
 			Vulnerabilities: []common.SecurityFinding{},
 		}, nil
 	}
@@ -350,10 +350,10 @@ func (c *ClaudeSDKClient) TerminateAgent(agentID string) error {
 	}
 
 	agent.Status = "terminated"
-	
+
 	// Update state file
 	return c.updateAgentState(agentID, map[string]interface{}{
-		"status":       "terminated",
+		"status":        "terminated",
 		"terminated_at": time.Now(),
 	})
 }
@@ -395,7 +395,7 @@ func (c *ClaudeSDKClient) updateAgentState(agentID string, updates map[string]in
 
 func getAgentFocus(agentType string) string {
 	focusMap := map[string]string{
-		"code-injection-analyser":  "SQL, NoSQL, LDAP, OS Command, Expression Language injection",
+		"code-injection-analyser": "SQL, NoSQL, LDAP, OS Command, Expression Language injection",
 		"code-xss-analyser":       "Reflected, Stored, and DOM-based XSS",
 		"code-path-analyser":      "Path traversal and file inclusion vulnerabilities",
 		"code-crypto-analyser":    "Cryptographic implementation flaws",
@@ -404,7 +404,7 @@ func getAgentFocus(agentType string) string {
 		"code-xxe-analyser":       "XML external entity (XXE) vulnerabilities",
 		"code-race-analyser":      "Race conditions and concurrency vulnerabilities",
 	}
-	
+
 	if focus, exists := focusMap[agentType]; exists {
 		return focus
 	}

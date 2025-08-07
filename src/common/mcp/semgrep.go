@@ -18,12 +18,12 @@ type SemgrepMCPClient struct {
 
 // SemgrepMCPConfig represents Semgrep MCP configuration
 type SemgrepMCPConfig struct {
-	ServerURL       string
-	Timeout         int // seconds
-	EnableAST       bool
-	EnableCustom    bool
-	EnableRealTime  bool
-	DefaultConfig   string
+	ServerURL      string
+	Timeout        int // seconds
+	EnableAST      bool
+	EnableCustom   bool
+	EnableRealTime bool
+	DefaultConfig  string
 }
 
 // SemgrepScanResult represents the result of a Semgrep scan via MCP
@@ -35,25 +35,25 @@ type SemgrepScanResult struct {
 
 // SemgrepFinding represents a single Semgrep finding
 type SemgrepFinding struct {
-	RuleID      string         `json:"rule_id"`
-	Path        string         `json:"path"`
-	Message     string         `json:"message"`
-	Severity    string         `json:"severity"`
-	StartLine   int            `json:"start_line"`
-	EndLine     int            `json:"end_line"`
-	StartColumn int            `json:"start_column"`
-	EndColumn   int            `json:"end_column"`
-	Code        string         `json:"code"`
-	Fix         string         `json:"fix,omitempty"`
+	RuleID      string                 `json:"rule_id"`
+	Path        string                 `json:"path"`
+	Message     string                 `json:"message"`
+	Severity    string                 `json:"severity"`
+	StartLine   int                    `json:"start_line"`
+	EndLine     int                    `json:"end_line"`
+	StartColumn int                    `json:"start_column"`
+	EndColumn   int                    `json:"end_column"`
+	Code        string                 `json:"code"`
+	Fix         string                 `json:"fix,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // ScanStats represents scan statistics
 type ScanStats struct {
-	FilesScanned   int    `json:"files_scanned"`
-	RulesRun       int    `json:"rules_run"`
-	FindingsCount  int    `json:"findings_count"`
-	Duration       string `json:"duration"`
+	FilesScanned  int    `json:"files_scanned"`
+	RulesRun      int    `json:"rules_run"`
+	FindingsCount int    `json:"findings_count"`
+	Duration      string `json:"duration"`
 }
 
 // ASTResult represents an Abstract Syntax Tree result
@@ -71,22 +71,22 @@ func NewSemgrepMCPClient(config *SemgrepMCPConfig) (*SemgrepMCPClient, error) {
 			DefaultConfig: "auto",
 		}
 	}
-	
+
 	clientConfig := ClientConfig{
 		ServerURL: config.ServerURL,
 		Timeout:   timeDuration(config.Timeout),
 	}
-	
+
 	client, err := NewClient(clientConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create MCP client: %w", err)
 	}
-	
+
 	// Verify Semgrep tools are available
 	if err := verifySemgrepTools(client); err != nil {
 		return nil, fmt.Errorf("Semgrep tools not available: %w", err)
 	}
-	
+
 	return &SemgrepMCPClient{
 		client: client,
 		config: config,
@@ -99,19 +99,19 @@ func verifySemgrepTools(client *Client) error {
 		"security_check",
 		"semgrep_scan",
 	}
-	
+
 	tools := client.ListTools()
 	toolMap := make(map[string]bool)
 	for _, tool := range tools {
 		toolMap[tool.Name] = true
 	}
-	
+
 	for _, required := range requiredTools {
 		if !toolMap[required] {
 			return fmt.Errorf("required tool %s not found", required)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -120,11 +120,11 @@ func (s *SemgrepMCPClient) SecurityCheck(ctx context.Context, code string) (*Sem
 	result, err := s.client.CallTool(ctx, "security_check", map[string]interface{}{
 		"code": code,
 	})
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("security check failed: %w", err)
 	}
-	
+
 	return parseScanResult(result)
 }
 
@@ -139,11 +139,11 @@ func (s *SemgrepMCPClient) ScanWithConfig(ctx context.Context, path, config stri
 		"path":   path,
 		"config": config,
 	})
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("scan failed: %w", err)
 	}
-	
+
 	return parseScanResult(result)
 }
 
@@ -152,16 +152,16 @@ func (s *SemgrepMCPClient) ScanWithCustomRule(ctx context.Context, path, rule st
 	if !s.config.EnableCustom {
 		return nil, fmt.Errorf("custom rules are disabled")
 	}
-	
+
 	result, err := s.client.CallTool(ctx, "semgrep_scan_with_custom_rule", map[string]interface{}{
 		"path": path,
 		"rule": rule,
 	})
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("custom rule scan failed: %w", err)
 	}
-	
+
 	return parseScanResult(result)
 }
 
@@ -170,15 +170,15 @@ func (s *SemgrepMCPClient) GetAST(ctx context.Context, code string) (*ASTResult,
 	if !s.config.EnableAST {
 		return nil, fmt.Errorf("AST analysis is disabled")
 	}
-	
+
 	result, err := s.client.CallTool(ctx, "get_abstract_syntax_tree", map[string]interface{}{
 		"code": code,
 	})
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("AST analysis failed: %w", err)
 	}
-	
+
 	return parseASTResult(result)
 }
 
@@ -191,7 +191,7 @@ func (s *SemgrepMCPClient) ScanDirectory(ctx context.Context, dir string) (*Semg
 // ConvertToCommonFormat converts MCP findings to common vulnerability format
 func (s *SemgrepMCPClient) ConvertToCommonFormat(findings []SemgrepFinding) []common.Vulnerability {
 	vulnerabilities := make([]common.Vulnerability, 0, len(findings))
-	
+
 	for _, finding := range findings {
 		vuln := common.Vulnerability{
 			Type:        finding.RuleID,
@@ -202,20 +202,20 @@ func (s *SemgrepMCPClient) ConvertToCommonFormat(findings []SemgrepFinding) []co
 			Code:        finding.Code,
 			Confidence:  0.9, // Default high confidence for Semgrep
 		}
-		
+
 		// Extract CWE if available
 		if cwe, ok := finding.Metadata["cwe"].(string); ok {
 			vuln.CWE = cwe
 		}
-		
+
 		// Extract OWASP if available
 		if owasp, ok := finding.Metadata["owasp"].(string); ok {
 			vuln.OWASP = owasp
 		}
-		
+
 		vulnerabilities = append(vulnerabilities, vuln)
 	}
-	
+
 	return vulnerabilities
 }
 
@@ -224,17 +224,17 @@ func parseScanResult(result *ToolResult) (*SemgrepScanResult, error) {
 	if result.IsError {
 		return nil, fmt.Errorf("scan error: %v", result.Content)
 	}
-	
+
 	data, err := json.Marshal(result.Content)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal result: %w", err)
 	}
-	
+
 	var scanResult SemgrepScanResult
 	if err := json.Unmarshal(data, &scanResult); err != nil {
 		return nil, fmt.Errorf("failed to parse scan result: %w", err)
 	}
-	
+
 	return &scanResult, nil
 }
 
@@ -243,17 +243,17 @@ func parseASTResult(result *ToolResult) (*ASTResult, error) {
 	if result.IsError {
 		return nil, fmt.Errorf("AST error: %v", result.Content)
 	}
-	
+
 	data, err := json.Marshal(result.Content)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal result: %w", err)
 	}
-	
+
 	var astResult ASTResult
 	if err := json.Unmarshal(data, &astResult); err != nil {
 		return nil, fmt.Errorf("failed to parse AST result: %w", err)
 	}
-	
+
 	return &astResult, nil
 }
 

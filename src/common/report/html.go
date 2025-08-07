@@ -30,9 +30,9 @@ func GenerateHTML(reportData *common.ReportData, outDir string) (string, error) 
 		"toLowerCase": toLowerCase,
 		"getSeverity": getSeverity,
 		"getFileType": getFileType,
-		"mul": func(a, b float64) float64 { return a * b },
-		"add": func(a, b int) int { return a + b },
-		"gt": func(a, b int) bool { return a > b },
+		"mul":         func(a, b float64) float64 { return a * b },
+		"add":         func(a, b int) int { return a + b },
+		"gt":          func(a, b int) bool { return a > b },
 	})
 
 	// Parse the template
@@ -112,7 +112,7 @@ func ConvertValidatedResultsToReport(target string, validatedResults []common.Va
 	// Convert validated results to report findings
 	for _, validatedResult := range validatedResults {
 		result := validatedResult.Result
-		
+
 		// Skip informational findings (only include HIGH, MEDIUM, LOW severity)
 		severity := strings.ToUpper(result.Extra.Metadata.Impact)
 		if severity != "HIGH" && severity != "MEDIUM" && severity != "LOW" {
@@ -162,11 +162,11 @@ func ConvertTruffleHogToReport(target string, trufflehogJson *common.TruffleHogJ
 		if result.SourceMetadata == nil || result.DetectorName == "" {
 			continue
 		}
-		
+
 		// Extract file path and line number
 		var filePath string
 		var lineNum int
-		
+
 		// TruffleHog can scan filesystem or git - handle both
 		if result.SourceMetadata.Data.Filesystem != nil {
 			filePath = result.SourceMetadata.Data.Filesystem.File
@@ -201,10 +201,10 @@ func ConvertTruffleHogToReport(target string, trufflehogJson *common.TruffleHogJ
 	SortSecretFindings(secretFindings)
 
 	return &common.ReportData{
-		Target:                     target,
-		SecretStats:                secretStats,
-		SecretStatsOrdering:        secretStatsOrdering,
-		SecretFindings:             secretFindings,
+		Target:              target,
+		SecretStats:         secretStats,
+		SecretStatsOrdering: secretStatsOrdering,
+		SecretFindings:      secretFindings,
 	}
 }
 
@@ -215,7 +215,7 @@ func AddTruffleHogToReport(reportData *common.ReportData, target string, truffle
 	}
 
 	truffleHogData := ConvertTruffleHogToReport(target, trufflehogJson)
-	
+
 	// Merge the TruffleHog data into the existing report
 	reportData.SecretStats = truffleHogData.SecretStats
 	reportData.SecretStatsOrdering = truffleHogData.SecretStatsOrdering

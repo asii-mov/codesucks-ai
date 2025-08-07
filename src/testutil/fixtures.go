@@ -73,10 +73,10 @@ func CreateSampleEnhancedVulnerability() common.EnhancedVulnerability {
 			Transformations: []string{},
 			Sink:            "SQL query at line 44",
 		},
-		VulnerableCode:   `query := fmt.Sprintf("SELECT * FROM users WHERE id = %s", userID)`,
-		ExploitExample:   `curl -X GET 'http://app/user?id=1 OR 1=1--'`,
-		SecureCode:       `query := "SELECT * FROM users WHERE id = ?" \n db.Query(query, userID)`,
-		FixExplanation:   "Use parameterized queries to prevent SQL injection",
+		VulnerableCode: `query := fmt.Sprintf("SELECT * FROM users WHERE id = %s", userID)`,
+		ExploitExample: `curl -X GET 'http://app/user?id=1 OR 1=1--'`,
+		SecureCode:     `query := "SELECT * FROM users WHERE id = ?" \n db.Query(query, userID)`,
+		FixExplanation: "Use parameterized queries to prevent SQL injection",
 	}
 }
 
@@ -87,11 +87,11 @@ func CreateSampleOrchestratorState() *common.OrchestratorState {
 		CreatedAt:    time.Now(),
 		CurrentPhase: common.PhaseInitialization,
 		CodebaseContext: common.CodebaseContext{
-			PrimaryLanguage:      "go",
-			Frameworks:           []string{"gin", "gorm"},
-			EntryPoints:          []string{"main.go", "cmd/server/main.go"},
-			TotalFiles:           150,
-			TotalLOC:             25000,
+			PrimaryLanguage:       "go",
+			Frameworks:            []string{"gin", "gorm"},
+			EntryPoints:           []string{"main.go", "cmd/server/main.go"},
+			TotalFiles:            150,
+			TotalLOC:              25000,
 			SecurityRelevantFiles: []string{"auth/", "controllers/", "middleware/"},
 		},
 		CodePatterns: common.CodePatterns{
@@ -120,8 +120,8 @@ func CreateSampleOrchestratorState() *common.OrchestratorState {
 			CreateSampleEnhancedVulnerability(),
 		},
 		CodeMetrics: common.CodeMetrics{
-			FilesAnalyzed:      100,
-			FunctionsAnalyzed:  500,
+			FilesAnalyzed:        100,
+			FunctionsAnalyzed:    500,
 			TotalVulnerabilities: 15,
 			SeverityDistribution: map[string]int{
 				"CRITICAL": 3,

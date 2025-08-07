@@ -12,13 +12,13 @@ type Options struct {
 	Repos string // File containing repository list
 
 	// Scanning configuration
-	NoSemgrep     bool
-	SemgrepPath   string
-	ConfigPath    string
-	NoTruffleHog  bool
+	NoSemgrep      bool
+	SemgrepPath    string
+	ConfigPath     string
+	NoTruffleHog   bool
 	TruffleHogPath string
-	VerifySecrets bool
-	OutDir        string
+	VerifySecrets  bool
+	OutDir         string
 
 	// AI automation
 	AutoFix         bool
@@ -29,13 +29,13 @@ type Options struct {
 	MinConfidence   float64
 
 	// Agent validation
-	ValidationConfidence  float64
+	ValidationConfidence float64
 	NoAgentValidation    bool
-	
+
 	// Orchestrator mode
-	OrchestratorMode     bool
-	SessionDir           string
-	AgentsDir            string
+	OrchestratorMode bool
+	SessionDir       string
+	AgentsDir        string
 
 	// GitHub integration
 	GitHubToken         string
@@ -48,7 +48,7 @@ type Options struct {
 
 	// Configuration file
 	ConfigFile string
-	
+
 	// MCP Mode
 	UseMCPMode        bool
 	MCPServerURL      string
@@ -128,7 +128,7 @@ type Config struct {
 	Orchestrator    OrchestratorConfig    `yaml:"orchestrator"`
 
 	AgentSettings struct {
-		InjectionAnalyser  AgentConfig `yaml:"injection_analyser,omitempty"`
+		InjectionAnalyser AgentConfig `yaml:"injection_analyser,omitempty"`
 		XSSAnalyser       AgentConfig `yaml:"xss_analyser,omitempty"`
 		PathAnalyser      AgentConfig `yaml:"path_analyser,omitempty"`
 		CryptoAnalyser    AgentConfig `yaml:"crypto_analyser,omitempty"`
@@ -141,13 +141,13 @@ type Config struct {
 
 // AgentConfig represents configuration for individual agents
 type AgentConfig struct {
-	Enabled        bool     `yaml:"enabled"`
-	Model          string   `yaml:"model,omitempty"`
-	MaxTokens      int      `yaml:"max_tokens,omitempty"`
-	Timeout        int      `yaml:"timeout,omitempty"`
-	FilePatterns   []string `yaml:"file_patterns,omitempty"`
-	ExcludePatterns []string `yaml:"exclude_patterns,omitempty"`
-	ConfidenceThreshold float64 `yaml:"confidence_threshold,omitempty"`
+	Enabled             bool     `yaml:"enabled"`
+	Model               string   `yaml:"model,omitempty"`
+	MaxTokens           int      `yaml:"max_tokens,omitempty"`
+	Timeout             int      `yaml:"timeout,omitempty"`
+	FilePatterns        []string `yaml:"file_patterns,omitempty"`
+	ExcludePatterns     []string `yaml:"exclude_patterns,omitempty"`
+	ConfidenceThreshold float64  `yaml:"confidence_threshold,omitempty"`
 }
 
 // Semgrep output structures
@@ -191,10 +191,10 @@ type TruffleHogJson struct {
 
 type TruffleHogResult struct {
 	// Check if this is a log entry or a finding
-	Level   string `json:"level,omitempty"`
-	Msg     string `json:"msg,omitempty"`
-	Logger  string `json:"logger,omitempty"`
-	
+	Level  string `json:"level,omitempty"`
+	Msg    string `json:"msg,omitempty"`
+	Logger string `json:"logger,omitempty"`
+
 	// Actual finding fields
 	DetectorName        string                    `json:"DetectorName,omitempty"`
 	DetectorType        int                       `json:"DetectorType,omitempty"`
@@ -234,46 +234,46 @@ type SecurityAnalysis struct {
 
 // Agent Validation structures
 type AgentValidation struct {
-	IsLegitimate       bool    `json:"is_legitimate"`
-	Confidence         float64 `json:"confidence"`
-	Reasoning          string  `json:"reasoning"`
-	ContextAnalysis    string  `json:"context_analysis"`
-	RecommendedAction  string  `json:"recommended_action"`
+	IsLegitimate        bool    `json:"is_legitimate"`
+	Confidence          float64 `json:"confidence"`
+	Reasoning           string  `json:"reasoning"`
+	ContextAnalysis     string  `json:"context_analysis"`
+	RecommendedAction   string  `json:"recommended_action"`
 	FalsePositiveReason string  `json:"false_positive_reason,omitempty"`
-	ValidatedAt        string  `json:"validated_at"`
+	ValidatedAt         string  `json:"validated_at"`
 }
 
 type RepositoryContext struct {
-	ProjectStructure    ProjectStructure          `json:"project_structure"`
-	TechnologyStack     TechnologyStack           `json:"technology_stack"`
-	SecurityPatterns    []SecurityPattern         `json:"security_patterns"`
-	FrameworkMitigations []FrameworkMitigation    `json:"framework_mitigations"`
-	DocumentationInsights []DocumentationInsight  `json:"documentation_insights"`
+	ProjectStructure      ProjectStructure       `json:"project_structure"`
+	TechnologyStack       TechnologyStack        `json:"technology_stack"`
+	SecurityPatterns      []SecurityPattern      `json:"security_patterns"`
+	FrameworkMitigations  []FrameworkMitigation  `json:"framework_mitigations"`
+	DocumentationInsights []DocumentationInsight `json:"documentation_insights"`
 }
 
 type ProjectStructure struct {
-	Language          string            `json:"language"`
-	MainEntryPoints   []string          `json:"main_entry_points"`
-	ConfigFiles       []string          `json:"config_files"`
-	TestDirectories   []string          `json:"test_directories"`
-	Documentation     []string          `json:"documentation"`
-	Dependencies      map[string]string `json:"dependencies"`
-	Architecture      string            `json:"architecture"`
+	Language        string            `json:"language"`
+	MainEntryPoints []string          `json:"main_entry_points"`
+	ConfigFiles     []string          `json:"config_files"`
+	TestDirectories []string          `json:"test_directories"`
+	Documentation   []string          `json:"documentation"`
+	Dependencies    map[string]string `json:"dependencies"`
+	Architecture    string            `json:"architecture"`
 }
 
 type TechnologyStack struct {
-	Framework          string   `json:"framework"`
-	Libraries          []string `json:"libraries"`
-	DatabaseTech       []string `json:"database_tech"`
-	WebServer          string   `json:"web_server"`
-	SecurityLibraries  []string `json:"security_libraries"`
-	BuildTools         []string `json:"build_tools"`
+	Framework         string   `json:"framework"`
+	Libraries         []string `json:"libraries"`
+	DatabaseTech      []string `json:"database_tech"`
+	WebServer         string   `json:"web_server"`
+	SecurityLibraries []string `json:"security_libraries"`
+	BuildTools        []string `json:"build_tools"`
 }
 
 type SecurityPattern struct {
-	Pattern     string `json:"pattern"`
-	Description string `json:"description"`
-	Location    string `json:"location"`
+	Pattern     string  `json:"pattern"`
+	Description string  `json:"description"`
+	Location    string  `json:"location"`
 	Confidence  float64 `json:"confidence"`
 }
 
@@ -285,8 +285,8 @@ type FrameworkMitigation struct {
 }
 
 type DocumentationInsight struct {
-	Source   string `json:"source"`
-	Content  string `json:"content"`
+	Source    string  `json:"source"`
+	Content   string  `json:"content"`
 	Relevance float64 `json:"relevance"`
 }
 
@@ -294,7 +294,7 @@ type DocumentationInsight struct {
 type ValidatedResult struct {
 	Result
 	AgentValidation *AgentValidation `json:"agent_validation,omitempty"`
-	IsFiltered      bool            `json:"is_filtered"`
+	IsFiltered      bool             `json:"is_filtered"`
 }
 
 // GitHub authentication structures
@@ -358,7 +358,7 @@ type SemgrepFinding struct {
 	StopLine           int
 	GithubLink         string
 	AgentValidation    *AgentValidation `json:"agent_validation,omitempty"`
-	IsFiltered         bool            `json:"is_filtered,omitempty"`
+	IsFiltered         bool             `json:"is_filtered,omitempty"`
 }
 
 type TruffleHogFinding struct {
@@ -394,32 +394,32 @@ type ScanResult struct {
 
 // Agent-related structures for Claude Code SDK integration
 type OrchestratorState struct {
-	SessionID      string                 `json:"session_id"`
-	CreatedAt      time.Time             `json:"created_at"`
-	CurrentPhase   string                `json:"current_phase"`
-	CodebaseContext CodebaseContext      `json:"codebase_context"`
-	CodePatterns   CodePatterns          `json:"code_patterns"`
-	DecomposedAnalyses []DecomposedAnalysis `json:"decomposed_analyses"`
-	AnalysisAgents []AnalysisAgent        `json:"analysis_agents"`
-	Vulnerabilities []EnhancedVulnerability `json:"vulnerabilities"`
-	VulnerabilityPatterns []VulnerabilityPattern `json:"vulnerability_patterns"`
-	CodeMetrics    CodeMetrics            `json:"code_metrics"`
-	FinalReportPath *string               `json:"final_report_path"`
-	CompletedAt    *time.Time            `json:"completed_at"`
+	SessionID             string                  `json:"session_id"`
+	CreatedAt             time.Time               `json:"created_at"`
+	CurrentPhase          string                  `json:"current_phase"`
+	CodebaseContext       CodebaseContext         `json:"codebase_context"`
+	CodePatterns          CodePatterns            `json:"code_patterns"`
+	DecomposedAnalyses    []DecomposedAnalysis    `json:"decomposed_analyses"`
+	AnalysisAgents        []AnalysisAgent         `json:"analysis_agents"`
+	Vulnerabilities       []EnhancedVulnerability `json:"vulnerabilities"`
+	VulnerabilityPatterns []VulnerabilityPattern  `json:"vulnerability_patterns"`
+	CodeMetrics           CodeMetrics             `json:"code_metrics"`
+	FinalReportPath       *string                 `json:"final_report_path"`
+	CompletedAt           *time.Time              `json:"completed_at"`
 }
 
 type CodebaseContext struct {
 	PrimaryLanguage       string   `json:"primary_language"`
-	Frameworks           []string  `json:"frameworks"`
-	EntryPoints          []string  `json:"entry_points"`
-	TotalFiles           int      `json:"total_files"`
-	TotalLOC             int      `json:"total_loc"`
+	Frameworks            []string `json:"frameworks"`
+	EntryPoints           []string `json:"entry_points"`
+	TotalFiles            int      `json:"total_files"`
+	TotalLOC              int      `json:"total_loc"`
 	SecurityRelevantFiles []string `json:"security_relevant_files"`
 }
 
 type CodePatterns struct {
-	InputSources    []InputSource    `json:"input_sources"`
-	DangerousSinks  []DangerousSink  `json:"dangerous_sinks"`
+	InputSources     []InputSource     `json:"input_sources"`
+	DangerousSinks   []DangerousSink   `json:"dangerous_sinks"`
 	SecurityControls []SecurityControl `json:"security_controls"`
 }
 
@@ -441,7 +441,7 @@ type SecurityControl struct {
 }
 
 type DecomposedAnalysis struct {
-	AnalysisID      string   `json:"analysis_id"`
+	AnalysisID     string   `json:"analysis_id"`
 	Focus          string   `json:"focus"`
 	TargetPatterns []string `json:"target_patterns"`
 	FileScope      []string `json:"file_scope"`
@@ -449,27 +449,27 @@ type DecomposedAnalysis struct {
 }
 
 type AnalysisAgent struct {
-	AgentID           string `json:"agent_id"`
-	AgentType         string `json:"agent_type"`
-	AnalysisID        string `json:"analysis_id"`
-	StateFile         string `json:"state_file"`
-	Status           string `json:"status"`
-	FilesAnalyzed    int    `json:"files_analyzed"`
-	VulnerabilitiesFound int `json:"vulnerabilities_found"`
+	AgentID              string `json:"agent_id"`
+	AgentType            string `json:"agent_type"`
+	AnalysisID           string `json:"analysis_id"`
+	StateFile            string `json:"state_file"`
+	Status               string `json:"status"`
+	FilesAnalyzed        int    `json:"files_analyzed"`
+	VulnerabilitiesFound int    `json:"vulnerabilities_found"`
 }
 
 type EnhancedVulnerability struct {
-	VulnID       string       `json:"vuln_id"`
-	Type         string       `json:"type"`
-	CweID        string       `json:"cwe_id"`
-	Severity     string       `json:"severity"`
-	Confidence   string       `json:"confidence"`
-	Location     VulnLocation `json:"location"`
-	DataFlow     DataFlow     `json:"data_flow"`
-	VulnerableCode string     `json:"vulnerable_code"`
-	ExploitExample string     `json:"exploit_example"`
-	SecureCode   string       `json:"secure_code"`
-	FixExplanation string     `json:"fix_explanation"`
+	VulnID         string       `json:"vuln_id"`
+	Type           string       `json:"type"`
+	CweID          string       `json:"cwe_id"`
+	Severity       string       `json:"severity"`
+	Confidence     string       `json:"confidence"`
+	Location       VulnLocation `json:"location"`
+	DataFlow       DataFlow     `json:"data_flow"`
+	VulnerableCode string       `json:"vulnerable_code"`
+	ExploitExample string       `json:"exploit_example"`
+	SecureCode     string       `json:"secure_code"`
+	FixExplanation string       `json:"fix_explanation"`
 }
 
 type VulnLocation struct {
@@ -482,74 +482,74 @@ type VulnLocation struct {
 type DataFlow struct {
 	Source          string   `json:"source"`
 	Transformations []string `json:"transformations"`
-	Sink           string   `json:"sink"`
+	Sink            string   `json:"sink"`
 }
 
 type VulnerabilityPattern struct {
-	PatternID    string   `json:"pattern_id"`
-	Description  string   `json:"description"`
-	Instances    []string `json:"instances"`
-	SystemicFix  string   `json:"systemic_fix"`
+	PatternID   string   `json:"pattern_id"`
+	Description string   `json:"description"`
+	Instances   []string `json:"instances"`
+	SystemicFix string   `json:"systemic_fix"`
 }
 
 type CodeMetrics struct {
-	FilesAnalyzed         int            `json:"files_analyzed"`
-	FunctionsAnalyzed     int            `json:"functions_analyzed"`
-	TotalVulnerabilities  int            `json:"total_vulnerabilities"`
-	SeverityDistribution  map[string]int `json:"severity_distribution"`
-	VulnerabilityDensity  float64        `json:"vulnerability_density"`
-	MostVulnerableComponents []string    `json:"most_vulnerable_components"`
+	FilesAnalyzed            int            `json:"files_analyzed"`
+	FunctionsAnalyzed        int            `json:"functions_analyzed"`
+	TotalVulnerabilities     int            `json:"total_vulnerabilities"`
+	SeverityDistribution     map[string]int `json:"severity_distribution"`
+	VulnerabilityDensity     float64        `json:"vulnerability_density"`
+	MostVulnerableComponents []string       `json:"most_vulnerable_components"`
 }
 
 type AgentState struct {
-	AgentID         string           `json:"agent_id"`
-	AgentType       string           `json:"agent_type"`
-	AnalysisID      string           `json:"analysis_id"`
-	Status          string           `json:"status"`
-	Files           []string         `json:"files"`
-	FilesProcessed  []string         `json:"files_processed"`
-	StartTime       time.Time        `json:"start_time"`
-	LastUpdate      time.Time        `json:"last_update"`
-	Progress        float64          `json:"progress"`
-	Results         []SecurityFinding `json:"results"`
-	Errors          []string         `json:"errors"`
+	AgentID        string            `json:"agent_id"`
+	AgentType      string            `json:"agent_type"`
+	AnalysisID     string            `json:"analysis_id"`
+	Status         string            `json:"status"`
+	Files          []string          `json:"files"`
+	FilesProcessed []string          `json:"files_processed"`
+	StartTime      time.Time         `json:"start_time"`
+	LastUpdate     time.Time         `json:"last_update"`
+	Progress       float64           `json:"progress"`
+	Results        []SecurityFinding `json:"results"`
+	Errors         []string          `json:"errors"`
 }
 
 type AgentStatus struct {
 	AgentID         string    `json:"agent_id"`
-	Type           string    `json:"type"`
-	Status         string    `json:"status"`
-	Progress       float64   `json:"progress"`
-	FilesAnalyzed  int       `json:"files_analyzed"`
-	TotalFiles     int       `json:"total_files"`
-	Vulnerabilities int      `json:"vulnerabilities"`
-	StartTime      time.Time `json:"start_time"`
-	LastUpdate     time.Time `json:"last_update"`
+	Type            string    `json:"type"`
+	Status          string    `json:"status"`
+	Progress        float64   `json:"progress"`
+	FilesAnalyzed   int       `json:"files_analyzed"`
+	TotalFiles      int       `json:"total_files"`
+	Vulnerabilities int       `json:"vulnerabilities"`
+	StartTime       time.Time `json:"start_time"`
+	LastUpdate      time.Time `json:"last_update"`
 }
 
 type AgentResults struct {
-	AgentID         string           `json:"agent_id"`
-	Type           string           `json:"type"`
-	Status         string           `json:"status"`
-	FilesAnalyzed  []string         `json:"files_analyzed"`
+	AgentID         string            `json:"agent_id"`
+	Type            string            `json:"type"`
+	Status          string            `json:"status"`
+	FilesAnalyzed   []string          `json:"files_analyzed"`
 	Vulnerabilities []SecurityFinding `json:"vulnerabilities"`
-	Patterns       []SystemicPattern `json:"patterns"`
-	Metrics        AgentMetrics     `json:"metrics"`
-	CompletedAt    time.Time        `json:"completed_at"`
+	Patterns        []SystemicPattern `json:"patterns"`
+	Metrics         AgentMetrics      `json:"metrics"`
+	CompletedAt     time.Time         `json:"completed_at"`
 }
 
 type SecurityFinding struct {
-	Type            string  `json:"type"`
-	File            string  `json:"file"`
-	LineStart       int     `json:"line_start"`
-	LineEnd         int     `json:"line_end"`
-	Severity        string  `json:"severity"`
-	Confidence      float64 `json:"confidence"`
-	Description     string  `json:"description"`
-	VulnerableCode  string  `json:"vulnerable_code"`
-	ExploitExample  string  `json:"exploit_example"`
-	SecureFix       string  `json:"secure_fix"`
-	FixExplanation  string  `json:"fix_explanation"`
+	Type           string  `json:"type"`
+	File           string  `json:"file"`
+	LineStart      int     `json:"line_start"`
+	LineEnd        int     `json:"line_end"`
+	Severity       string  `json:"severity"`
+	Confidence     float64 `json:"confidence"`
+	Description    string  `json:"description"`
+	VulnerableCode string  `json:"vulnerable_code"`
+	ExploitExample string  `json:"exploit_example"`
+	SecureFix      string  `json:"secure_fix"`
+	FixExplanation string  `json:"fix_explanation"`
 }
 
 type SystemicPattern struct {
@@ -559,11 +559,11 @@ type SystemicPattern struct {
 }
 
 type AgentMetrics struct {
-	ProcessingTime     time.Duration `json:"processing_time"`
-	FilesScanned       int          `json:"files_scanned"`
-	LinesAnalyzed      int          `json:"lines_analyzed"`
-	VulnerabilitiesFound int        `json:"vulnerabilities_found"`
-	FalsePositives     int          `json:"false_positives"`
+	ProcessingTime       time.Duration `json:"processing_time"`
+	FilesScanned         int           `json:"files_scanned"`
+	LinesAnalyzed        int           `json:"lines_analyzed"`
+	VulnerabilitiesFound int           `json:"vulnerabilities_found"`
+	FalsePositives       int           `json:"false_positives"`
 }
 
 // Constants
@@ -571,32 +571,32 @@ const (
 	ClaudeAPIEndpoint = "https://api.anthropic.com/v1/messages"
 	DefaultModel      = "claude-3-5-sonnet-20241022"
 	MaxTokens         = 4096
-	
+
 	// Orchestrator phases
-	PhaseInitialization           = "INITIALIZATION"
-	PhaseCodebaseAnalysis        = "CODEBASE_ANALYSIS"
-	PhaseEntryPointMapping       = "ENTRY_POINT_MAPPING"
+	PhaseInitialization             = "INITIALIZATION"
+	PhaseCodebaseAnalysis           = "CODEBASE_ANALYSIS"
+	PhaseEntryPointMapping          = "ENTRY_POINT_MAPPING"
 	PhaseVulnerabilityDecomposition = "VULNERABILITY_DECOMPOSITION"
-	PhaseParallelAnalysis        = "PARALLEL_ANALYSIS"
-	PhaseSynthesis              = "SYNTHESIS"
-	PhaseReporting              = "REPORTING"
-	PhaseCompleted              = "COMPLETED"
-	
+	PhaseParallelAnalysis           = "PARALLEL_ANALYSIS"
+	PhaseSynthesis                  = "SYNTHESIS"
+	PhaseReporting                  = "REPORTING"
+	PhaseCompleted                  = "COMPLETED"
+
 	// Agent types
-	AgentTypeInjection     = "code-injection-analyser"
-	AgentTypeXSS          = "code-xss-analyser"
-	AgentTypePath         = "code-path-analyser"
-	AgentTypeCrypto       = "code-crypto-analyser"
-	AgentTypeAuth         = "code-auth-analyser"
-	AgentTypeDeserial     = "code-deserial-analyser"
-	AgentTypeXXE          = "code-xxe-analyser"
-	AgentTypeRace         = "code-race-analyser"
-	
+	AgentTypeInjection = "code-injection-analyser"
+	AgentTypeXSS       = "code-xss-analyser"
+	AgentTypePath      = "code-path-analyser"
+	AgentTypeCrypto    = "code-crypto-analyser"
+	AgentTypeAuth      = "code-auth-analyser"
+	AgentTypeDeserial  = "code-deserial-analyser"
+	AgentTypeXXE       = "code-xxe-analyser"
+	AgentTypeRace      = "code-race-analyser"
+
 	// Agent statuses
-	AgentStatusPending   = "pending"
-	AgentStatusRunning   = "running"
-	AgentStatusCompleted = "completed"
-	AgentStatusFailed    = "failed"
+	AgentStatusPending    = "pending"
+	AgentStatusRunning    = "running"
+	AgentStatusCompleted  = "completed"
+	AgentStatusFailed     = "failed"
 	AgentStatusTerminated = "terminated"
 )
 

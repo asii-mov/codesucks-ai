@@ -29,17 +29,17 @@ type Request struct {
 
 // Response represents an MCP response message
 type Response struct {
-	ID      string                 `json:"id"`
-	Type    MessageType            `json:"type"`
-	Result  interface{}            `json:"result,omitempty"`
-	Error   *ErrorResponse         `json:"error,omitempty"`
-	Version string                 `json:"version"`
+	ID      string         `json:"id"`
+	Type    MessageType    `json:"type"`
+	Result  interface{}    `json:"result,omitempty"`
+	Error   *ErrorResponse `json:"error,omitempty"`
+	Version string         `json:"version"`
 }
 
 // ErrorResponse represents an error in MCP protocol
 type ErrorResponse struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
 	Data    interface{} `json:"data,omitempty"`
 }
 
@@ -133,11 +133,11 @@ func ParseMessage(data []byte) (interface{}, error) {
 		Method string      `json:"method,omitempty"`
 		ID     string      `json:"id,omitempty"`
 	}
-	
+
 	if err := json.Unmarshal(data, &base); err != nil {
 		return nil, fmt.Errorf("failed to parse message: %w", err)
 	}
-	
+
 	switch base.Type {
 	case MessageTypeRequest:
 		var req Request
@@ -145,21 +145,21 @@ func ParseMessage(data []byte) (interface{}, error) {
 			return nil, fmt.Errorf("failed to parse request: %w", err)
 		}
 		return &req, nil
-		
+
 	case MessageTypeResponse, MessageTypeError:
 		var resp Response
 		if err := json.Unmarshal(data, &resp); err != nil {
 			return nil, fmt.Errorf("failed to parse response: %w", err)
 		}
 		return &resp, nil
-		
+
 	case MessageTypeNotify:
 		var notif Notification
 		if err := json.Unmarshal(data, &notif); err != nil {
 			return nil, fmt.Errorf("failed to parse notification: %w", err)
 		}
 		return &notif, nil
-		
+
 	default:
 		return nil, fmt.Errorf("unknown message type: %s", base.Type)
 	}

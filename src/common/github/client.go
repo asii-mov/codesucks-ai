@@ -45,9 +45,21 @@ func newTokenClient(ctx context.Context, token string) *github.Client {
 
 // ParseRepositoryURL extracts owner and repository name from GitHub URL
 func ParseRepositoryURL(url string) (owner, repo string, err error) {
-	// Remove common prefixes and suffixes
-	url = strings.TrimPrefix(url, "https://github.com/")
-	url = strings.TrimPrefix(url, "http://github.com/")
+	// Check if it's a non-GitHub URL
+	if !strings.Contains(url, "github.com") {
+		return "", "", fmt.Errorf("not a GitHub URL")
+	}
+
+	// Handle SSH git URLs
+	if strings.HasPrefix(url, "git@github.com:") {
+		url = strings.TrimPrefix(url, "git@github.com:")
+	} else {
+		// Remove HTTP(S) prefixes
+		url = strings.TrimPrefix(url, "https://github.com/")
+		url = strings.TrimPrefix(url, "http://github.com/")
+	}
+
+	// Remove common suffixes
 	url = strings.TrimSuffix(url, ".git")
 	url = strings.TrimSuffix(url, "/")
 

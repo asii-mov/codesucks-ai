@@ -18,12 +18,12 @@ import (
 
 // AgentValidator provides repository-aware vulnerability validation
 type AgentValidator struct {
-	APIKey         string
-	Model          string
-	HTTPClient     *http.Client
-	GitHubClient   *github.GitHubClient
-	RepoContext    *common.RepositoryContext
-	Debug          bool
+	APIKey       string
+	Model        string
+	HTTPClient   *http.Client
+	GitHubClient *github.GitHubClient
+	RepoContext  *common.RepositoryContext
+	Debug        bool
 }
 
 // NewAgentValidator creates a new agent validator
@@ -48,10 +48,10 @@ func (av *AgentValidator) FamiliarizeWithRepository(owner, repo, branch, tempDir
 	}
 
 	context := &common.RepositoryContext{
-		ProjectStructure:     common.ProjectStructure{},
-		TechnologyStack:      common.TechnologyStack{},
-		SecurityPatterns:     []common.SecurityPattern{},
-		FrameworkMitigations: []common.FrameworkMitigation{},
+		ProjectStructure:      common.ProjectStructure{},
+		TechnologyStack:       common.TechnologyStack{},
+		SecurityPatterns:      []common.SecurityPattern{},
+		FrameworkMitigations:  []common.FrameworkMitigation{},
 		DocumentationInsights: []common.DocumentationInsight{},
 	}
 
@@ -147,24 +147,24 @@ func (av *AgentValidator) analyzeProjectStructure(owner, repo, branch, tempDir s
 		}
 
 		filename := strings.ToLower(info.Name())
-		
+
 		// Identify main entry points
-		if filename == "main.go" || filename == "index.js" || filename == "app.js" || 
-		   filename == "server.js" || filename == "main.py" || filename == "__init__.py" {
+		if filename == "main.go" || filename == "index.js" || filename == "app.js" ||
+			filename == "server.js" || filename == "main.py" || filename == "__init__.py" {
 			mainFiles = append(mainFiles, relPath)
 		}
 
 		// Identify config files
-		if strings.Contains(filename, "config") || filename == "package.json" || 
-		   filename == "go.mod" || filename == "requirements.txt" || filename == "pom.xml" ||
-		   filename == "dockerfile" || strings.HasSuffix(filename, ".conf") ||
-		   strings.HasSuffix(filename, ".yaml") || strings.HasSuffix(filename, ".yml") {
+		if strings.Contains(filename, "config") || filename == "package.json" ||
+			filename == "go.mod" || filename == "requirements.txt" || filename == "pom.xml" ||
+			filename == "dockerfile" || strings.HasSuffix(filename, ".conf") ||
+			strings.HasSuffix(filename, ".yaml") || strings.HasSuffix(filename, ".yml") {
 			configFiles = append(configFiles, relPath)
 		}
 
 		// Identify documentation
 		if strings.Contains(filename, "readme") || strings.Contains(filename, "doc") ||
-		   strings.HasSuffix(filename, ".md") {
+			strings.HasSuffix(filename, ".md") {
 			docFiles = append(docFiles, relPath)
 		}
 
@@ -206,7 +206,7 @@ func (av *AgentValidator) analyzeTechnologyStack(owner, repo, branch string, con
 	// Analyze based on language and dependencies
 	for depName, depVersion := range context.ProjectStructure.Dependencies {
 		depLower := strings.ToLower(depName)
-		
+
 		// Security libraries
 		if av.isSecurityLibrary(depLower) {
 			stack.SecurityLibraries = append(stack.SecurityLibraries, fmt.Sprintf("%s@%s", depName, depVersion))
@@ -278,7 +278,7 @@ func (av *AgentValidator) analyzeDocumentation(owner, repo, branch string, conte
 // buildValidationPrompt builds the prompt for vulnerability validation
 func (av *AgentValidator) buildValidationPrompt(result common.Result, vulnerableCode, contextCode string) string {
 	repoContextStr := av.formatRepositoryContext()
-	
+
 	// Read prompt template from agent.md file
 	promptTemplate, err := av.loadPromptTemplate()
 	if err != nil {
@@ -331,7 +331,7 @@ Please respond in JSON format:
 
 Be thorough in your analysis and provide clear reasoning for your decision.`
 	}
-	
+
 	prompt := fmt.Sprintf(promptTemplate,
 		repoContextStr,
 		result.CheckID,
@@ -363,12 +363,12 @@ func (av *AgentValidator) loadPromptTemplate() (string, error) {
 			}
 		}
 	}
-	
+
 	content, err := ioutil.ReadFile(promptPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to read agent.md: %w", err)
 	}
-	
+
 	return string(content), nil
 }
 
@@ -379,34 +379,34 @@ func (av *AgentValidator) formatRepositoryContext() string {
 	}
 
 	var buf strings.Builder
-	
+
 	buf.WriteString("PROJECT STRUCTURE:\n")
 	buf.WriteString(fmt.Sprintf("  Language: %s\n", av.RepoContext.ProjectStructure.Language))
 	buf.WriteString(fmt.Sprintf("  Architecture: %s\n", av.RepoContext.ProjectStructure.Architecture))
 	buf.WriteString(fmt.Sprintf("  Entry Points: %s\n", strings.Join(av.RepoContext.ProjectStructure.MainEntryPoints, ", ")))
-	
+
 	buf.WriteString("\nTECHNOLOGY STACK:\n")
 	buf.WriteString(fmt.Sprintf("  Framework: %s\n", av.RepoContext.TechnologyStack.Framework))
 	buf.WriteString(fmt.Sprintf("  Security Libraries: %s\n", strings.Join(av.RepoContext.TechnologyStack.SecurityLibraries, ", ")))
 	buf.WriteString(fmt.Sprintf("  Database Tech: %s\n", strings.Join(av.RepoContext.TechnologyStack.DatabaseTech, ", ")))
-	
+
 	buf.WriteString("\nSECURITY PATTERNS:\n")
 	for _, pattern := range av.RepoContext.SecurityPatterns {
 		buf.WriteString(fmt.Sprintf("  - %s: %s (confidence: %.2f)\n", pattern.Pattern, pattern.Description, pattern.Confidence))
 	}
-	
+
 	return buf.String()
 }
 
 // Helper functions for analysis
 func (av *AgentValidator) detectLanguage(tempDir string) string {
 	languages := make(map[string]int)
-	
+
 	filepath.Walk(tempDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return err
 		}
-		
+
 		ext := strings.ToLower(filepath.Ext(info.Name()))
 		switch ext {
 		case ".go":
@@ -432,7 +432,7 @@ func (av *AgentValidator) detectLanguage(tempDir string) string {
 		}
 		return nil
 	})
-	
+
 	maxLang := "Unknown"
 	maxCount := 0
 	for lang, count := range languages {
@@ -441,7 +441,7 @@ func (av *AgentValidator) detectLanguage(tempDir string) string {
 			maxLang = lang
 		}
 	}
-	
+
 	return maxLang
 }
 
@@ -455,13 +455,13 @@ func (av *AgentValidator) detectArchitecture(tempDir, language string) string {
 			return "Monolith"
 		}
 	}
-	
+
 	if language == "JavaScript" || language == "TypeScript" {
 		if av.fileExists(filepath.Join(tempDir, "package.json")) {
 			return "Node.js Application"
 		}
 	}
-	
+
 	return "Unknown"
 }
 
@@ -475,7 +475,7 @@ func (av *AgentValidator) parseDependencies(tempDir string, dependencies map[str
 	if goMod := filepath.Join(tempDir, "go.mod"); av.fileExists(goMod) {
 		av.parseGoMod(goMod, dependencies)
 	}
-	
+
 	// Parse Node.js dependencies
 	if packageJson := filepath.Join(tempDir, "package.json"); av.fileExists(packageJson) {
 		av.parsePackageJson(packageJson, dependencies)
@@ -488,7 +488,7 @@ func (av *AgentValidator) parseGoMod(goModPath string, dependencies map[string]s
 	if err != nil {
 		return
 	}
-	
+
 	lines := strings.Split(string(content), "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -506,16 +506,16 @@ func (av *AgentValidator) parsePackageJson(packageJsonPath string, dependencies 
 	if err != nil {
 		return
 	}
-	
+
 	var pkg struct {
 		Dependencies    map[string]string `json:"dependencies"`
 		DevDependencies map[string]string `json:"devDependencies"`
 	}
-	
+
 	if err := json.Unmarshal(content, &pkg); err != nil {
 		return
 	}
-	
+
 	for name, version := range pkg.Dependencies {
 		dependencies[name] = version
 	}
@@ -530,7 +530,7 @@ func (av *AgentValidator) isSecurityLibrary(name string) bool {
 		"crypto", "argon2", "scrypt", "oauth2", "passport",
 		"csrf", "csurf", "express-validator", "joi", "yup",
 	}
-	
+
 	for _, lib := range securityLibs {
 		if strings.Contains(name, lib) {
 			return true
@@ -544,7 +544,7 @@ func (av *AgentValidator) isDatabaseTech(name string) bool {
 		"mongodb", "mysql", "postgresql", "sqlite", "redis",
 		"elasticsearch", "cassandra", "neo4j", "couchdb",
 	}
-	
+
 	for _, tech := range dbTech {
 		if strings.Contains(name, tech) {
 			return true
@@ -560,7 +560,7 @@ func (av *AgentValidator) isWebFramework(name string) bool {
 		"gin", "echo", "fiber", "chi",
 		"django", "flask", "fastapi",
 	}
-	
+
 	for _, framework := range frameworks {
 		if strings.Contains(name, framework) {
 			return true
@@ -575,7 +575,7 @@ func (av *AgentValidator) isBuildTool(name string) bool {
 		"babel", "typescript", "eslint", "prettier",
 		"jest", "mocha", "chai", "cypress",
 	}
-	
+
 	for _, tool := range buildTools {
 		if strings.Contains(name, tool) {
 			return true
@@ -586,7 +586,7 @@ func (av *AgentValidator) isBuildTool(name string) bool {
 
 func (av *AgentValidator) getFrameworkSecurityPatterns(framework string) []common.SecurityPattern {
 	patterns := []common.SecurityPattern{}
-	
+
 	switch strings.ToLower(framework) {
 	case "express":
 		patterns = append(patterns, common.SecurityPattern{
@@ -601,13 +601,13 @@ func (av *AgentValidator) getFrameworkSecurityPatterns(framework string) []commo
 			Confidence:  0.7,
 		})
 	}
-	
+
 	return patterns
 }
 
 func (av *AgentValidator) getLibrarySecurityPatterns(library string) []common.SecurityPattern {
 	patterns := []common.SecurityPattern{}
-	
+
 	if strings.Contains(library, "helmet") {
 		patterns = append(patterns, common.SecurityPattern{
 			Pattern:     "Security Headers",
@@ -615,7 +615,7 @@ func (av *AgentValidator) getLibrarySecurityPatterns(library string) []common.Se
 			Confidence:  0.9,
 		})
 	}
-	
+
 	return patterns
 }
 
@@ -630,18 +630,18 @@ func (av *AgentValidator) getFileContent(sourcePath, filePath string) (string, e
 
 func (av *AgentValidator) extractCodeContext(content string, startLine, endLine int) (string, string, error) {
 	lines := strings.Split(content, "\n")
-	
+
 	if startLine < 1 || endLine > len(lines) {
 		return "", "", fmt.Errorf("invalid line range")
 	}
-	
+
 	// Vulnerable code (0-indexed)
 	vulnerableCode := strings.Join(lines[startLine-1:endLine], "\n")
-	
+
 	// Context (10 lines before and after)
 	contextStart := max(0, startLine-10)
 	contextEnd := min(len(lines), endLine+10)
-	
+
 	var contextLines []string
 	for i := contextStart; i < contextEnd; i++ {
 		lineNum := i + 1
@@ -651,9 +651,9 @@ func (av *AgentValidator) extractCodeContext(content string, startLine, endLine 
 		}
 		contextLines = append(contextLines, fmt.Sprintf("%s%4d: %s", prefix, lineNum, lines[i]))
 	}
-	
+
 	contextCode := strings.Join(contextLines, "\n")
-	
+
 	return vulnerableCode, contextCode, nil
 }
 
@@ -714,18 +714,18 @@ func (av *AgentValidator) parseValidationResponse(response string) (*common.Agen
 	// Try to extract JSON from response
 	jsonStart := strings.Index(response, "{")
 	jsonEnd := strings.LastIndex(response, "}")
-	
+
 	if jsonStart == -1 || jsonEnd == -1 {
 		return nil, fmt.Errorf("no valid JSON found in response")
 	}
-	
+
 	jsonStr := response[jsonStart : jsonEnd+1]
-	
+
 	var validation common.AgentValidation
 	if err := json.Unmarshal([]byte(jsonStr), &validation); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON response: %w", err)
 	}
-	
+
 	return &validation, nil
 }
 

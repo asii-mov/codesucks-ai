@@ -103,10 +103,10 @@ func TestLoadEnvFile(t *testing.T) {
 	// Create a temporary .env file for testing
 	tempDir := t.TempDir()
 	envFile := filepath.Join(tempDir, ".env")
-	
+
 	content := `TEST_ENV_VAR=test_value
 TEST_ANOTHER_VAR=another_value`
-	
+
 	err := os.WriteFile(envFile, []byte(content), 0644)
 	require.NoError(t, err)
 

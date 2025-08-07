@@ -17,15 +17,15 @@ import (
 
 // SecurityOrchestrator implements the 7-phase security analysis workflow
 type SecurityOrchestrator struct {
-	SessionID       string
-	SessionDir      string
-	AgentsDir       string
-	State           *common.OrchestratorState
-	StateFile       string
-	ClaudeSDK       *agent.ClaudeSDKClient
-	GitHubClient    *github.GitHubClient
-	Options         *common.Options
-	mu              sync.RWMutex
+	SessionID    string
+	SessionDir   string
+	AgentsDir    string
+	State        *common.OrchestratorState
+	StateFile    string
+	ClaudeSDK    *agent.ClaudeSDKClient
+	GitHubClient *github.GitHubClient
+	Options      *common.Options
+	mu           sync.RWMutex
 }
 
 // NewSecurityOrchestrator creates a new orchestrator instance
@@ -60,9 +60,9 @@ func NewSecurityOrchestrator(sessionDir, agentsDir string, options *common.Optio
 
 	// Initialize orchestrator state
 	state := &common.OrchestratorState{
-		SessionID:    sessionID,
-		CreatedAt:    time.Now(),
-		CurrentPhase: common.PhaseInitialization,
+		SessionID:       sessionID,
+		CreatedAt:       time.Now(),
+		CurrentPhase:    common.PhaseInitialization,
 		CodebaseContext: common.CodebaseContext{},
 		CodePatterns: common.CodePatterns{
 			InputSources:     []common.InputSource{},
@@ -143,9 +143,9 @@ func (o *SecurityOrchestrator) ExecuteSecurityAnalysis(repoURL string) (*common.
 	// Create final scan result
 	result := &common.ScanResult{
 		RepoInfo: common.RepoInfo{
-			URL:           repoURL,
-			Language:      o.State.CodebaseContext.PrimaryLanguage,
-			Description:   fmt.Sprintf("AI-orchestrated security analysis with %d agents", len(o.State.AnalysisAgents)),
+			URL:         repoURL,
+			Language:    o.State.CodebaseContext.PrimaryLanguage,
+			Description: fmt.Sprintf("AI-orchestrated security analysis with %d agents", len(o.State.AnalysisAgents)),
 		},
 		ValidatedResults: o.convertToValidatedResults(),
 		ReportPath:       reportPath,
@@ -163,7 +163,7 @@ func (o *SecurityOrchestrator) ExecuteSecurityAnalysis(repoURL string) (*common.
 // Phase 1: Initialize Code Analysis
 func (o *SecurityOrchestrator) phase1_InitializeCodeAnalysis() error {
 	fmt.Println("🔄 Phase 1: Initialize Code Analysis")
-	
+
 	o.mu.Lock()
 	o.State.CurrentPhase = common.PhaseInitialization
 	o.mu.Unlock()
@@ -208,7 +208,7 @@ func (o *SecurityOrchestrator) phase2_AnalyzeCodebaseStructure(repoURL string) (
 
 	// Analyze project structure
 	projectStructure := o.analyzeProjectStructure(files, repoInfo.Language)
-	
+
 	// Detect frameworks and libraries
 	techStack := o.detectTechnologyStack(files, projectStructure.Language)
 
@@ -216,24 +216,24 @@ func (o *SecurityOrchestrator) phase2_AnalyzeCodebaseStructure(repoURL string) (
 	o.mu.Lock()
 	o.State.CodebaseContext = common.CodebaseContext{
 		PrimaryLanguage:       projectStructure.Language,
-		Frameworks:           techStack.Libraries,
-		EntryPoints:          projectStructure.MainEntryPoints,
-		TotalFiles:           len(files),
-		TotalLOC:             o.estimateLinesOfCode(files),
+		Frameworks:            techStack.Libraries,
+		EntryPoints:           projectStructure.MainEntryPoints,
+		TotalFiles:            len(files),
+		TotalLOC:              o.estimateLinesOfCode(files),
 		SecurityRelevantFiles: o.identifySecurityRelevantFiles(files),
 	}
 	o.mu.Unlock()
 
 	// Create repository context for agents
 	repoContext := &common.RepositoryContext{
-		ProjectStructure: projectStructure,
-		TechnologyStack:  techStack,
-		SecurityPatterns: []common.SecurityPattern{},
-		FrameworkMitigations: []common.FrameworkMitigation{},
+		ProjectStructure:      projectStructure,
+		TechnologyStack:       techStack,
+		SecurityPatterns:      []common.SecurityPattern{},
+		FrameworkMitigations:  []common.FrameworkMitigation{},
 		DocumentationInsights: []common.DocumentationInsight{},
 	}
 
-	fmt.Printf("✅ Detected language: %s, files: %d, LOC: ~%d\n", 
+	fmt.Printf("✅ Detected language: %s, files: %d, LOC: ~%d\n",
 		projectStructure.Language, len(files), o.State.CodebaseContext.TotalLOC)
 
 	return repoContext, o.updatePhase(common.PhaseEntryPointMapping)
@@ -245,10 +245,10 @@ func (o *SecurityOrchestrator) phase3_MapEntryPointsAndDataFlow(repoContext *com
 
 	// Identify input sources based on language and framework
 	inputSources := o.identifyInputSources(repoContext)
-	
+
 	// Locate dangerous operations
 	dangerousSinks := o.identifyDangerousSinks(repoContext)
-	
+
 	// Map security controls
 	securityControls := o.identifySecurityControls(repoContext)
 
@@ -273,35 +273,35 @@ func (o *SecurityOrchestrator) phase4_DecomposeIntoParallelAnalyses() error {
 	// Create specialized analysis tasks by vulnerability class
 	analyses := []common.DecomposedAnalysis{
 		{
-			AnalysisID:      "analysis_injection",
+			AnalysisID:     "analysis_injection",
 			Focus:          "SQL, NoSQL, LDAP, OS Command, Expression Language injection",
 			TargetPatterns: []string{"db.query", "execute", "system", "eval"},
 			FileScope:      o.filterFilesByPatterns([]string{"*.sql", "*.py", "*.js", "*.java", "*.go"}),
 			AssignedAgent:  common.AgentTypeInjection,
 		},
 		{
-			AnalysisID:      "analysis_xss",
+			AnalysisID:     "analysis_xss",
 			Focus:          "Reflected, Stored, and DOM-based XSS",
 			TargetPatterns: []string{"innerHTML", "document.write", "template", "render"},
 			FileScope:      o.filterFilesByPatterns([]string{"*.html", "*.js", "*.jsx", "*.vue", "*.py", "*.php"}),
 			AssignedAgent:  common.AgentTypeXSS,
 		},
 		{
-			AnalysisID:      "analysis_path",
+			AnalysisID:     "analysis_path",
 			Focus:          "Path traversal and file inclusion",
 			TargetPatterns: []string{"open", "read", "include", "require"},
 			FileScope:      o.filterFilesByPatterns([]string{"*.py", "*.js", "*.php", "*.java", "*.go"}),
 			AssignedAgent:  common.AgentTypePath,
 		},
 		{
-			AnalysisID:      "analysis_crypto",
+			AnalysisID:     "analysis_crypto",
 			Focus:          "Cryptographic implementation flaws",
 			TargetPatterns: []string{"md5", "sha1", "des", "random", "encrypt"},
 			FileScope:      o.filterFilesByPatterns([]string{"*.py", "*.js", "*.java", "*.go", "*.c", "*.cpp"}),
 			AssignedAgent:  common.AgentTypeCrypto,
 		},
 		{
-			AnalysisID:      "analysis_auth",
+			AnalysisID:     "analysis_auth",
 			Focus:          "Authentication and authorization flaws",
 			TargetPatterns: []string{"login", "auth", "session", "token", "password"},
 			FileScope:      o.filterFilesByPatterns([]string{"*.py", "*.js", "*.java", "*.go", "*.php"}),
@@ -390,7 +390,7 @@ func (o *SecurityOrchestrator) phase5_ExecuteParallelCodeAnalysis(repoContext *c
 				return
 			}
 
-			fmt.Printf("✅ Agent %s completed: %d vulnerabilities found\n", 
+			fmt.Printf("✅ Agent %s completed: %d vulnerabilities found\n",
 				agentInfo.AgentID, len(results.Vulnerabilities))
 
 			agentResults <- results
@@ -443,8 +443,8 @@ done:
 
 func (o *SecurityOrchestrator) analyzeProjectStructure(files []common.RepositoryFile, primaryLang string) common.ProjectStructure {
 	structure := common.ProjectStructure{
-		Language:         primaryLang,
-		MainEntryPoints:  []string{},
+		Language:        primaryLang,
+		MainEntryPoints: []string{},
 		ConfigFiles:     []string{},
 		TestDirectories: []string{},
 		Documentation:   []string{},
@@ -454,28 +454,28 @@ func (o *SecurityOrchestrator) analyzeProjectStructure(files []common.Repository
 
 	for _, file := range files {
 		name := strings.ToLower(file.Path)
-		
+
 		// Identify entry points
-		if strings.Contains(name, "main.") || strings.Contains(name, "index.") || 
-		   strings.Contains(name, "app.") || strings.Contains(name, "server.") {
+		if strings.Contains(name, "main.") || strings.Contains(name, "index.") ||
+			strings.Contains(name, "app.") || strings.Contains(name, "server.") {
 			structure.MainEntryPoints = append(structure.MainEntryPoints, file.Path)
 		}
-		
+
 		// Identify config files
 		if strings.Contains(name, "config") || strings.HasSuffix(name, ".conf") ||
-		   strings.HasSuffix(name, ".yaml") || strings.HasSuffix(name, ".yml") ||
-		   strings.HasSuffix(name, ".json") && (strings.Contains(name, "package") || strings.Contains(name, "config")) {
+			strings.HasSuffix(name, ".yaml") || strings.HasSuffix(name, ".yml") ||
+			strings.HasSuffix(name, ".json") && (strings.Contains(name, "package") || strings.Contains(name, "config")) {
 			structure.ConfigFiles = append(structure.ConfigFiles, file.Path)
 		}
-		
+
 		// Identify test directories
 		if strings.Contains(name, "test") || strings.Contains(name, "spec") {
 			structure.TestDirectories = append(structure.TestDirectories, file.Path)
 		}
-		
+
 		// Identify documentation
 		if strings.HasSuffix(name, ".md") || strings.HasSuffix(name, ".rst") ||
-		   strings.HasSuffix(name, ".txt") && strings.Contains(name, "readme") {
+			strings.HasSuffix(name, ".txt") && strings.Contains(name, "readme") {
 			structure.Documentation = append(structure.Documentation, file.Path)
 		}
 	}
@@ -497,22 +497,22 @@ func (o *SecurityOrchestrator) detectTechnologyStack(files []common.RepositoryFi
 	frameworkIndicators := map[string]string{
 		"package.json":     "Node.js",
 		"requirements.txt": "Python",
-		"pom.xml":         "Java/Maven",
-		"go.mod":          "Go",
-		"Gemfile":         "Ruby",
-		"composer.json":   "PHP",
+		"pom.xml":          "Java/Maven",
+		"go.mod":           "Go",
+		"Gemfile":          "Ruby",
+		"composer.json":    "PHP",
 	}
 
 	for _, file := range files {
 		name := strings.ToLower(file.Path)
-		
+
 		if framework, exists := frameworkIndicators[name]; exists {
 			stack.Framework = framework
 		}
-		
+
 		// Detect build tools
 		if strings.Contains(name, "makefile") || strings.Contains(name, "dockerfile") ||
-		   strings.Contains(name, "build.") || strings.Contains(name, "webpack") {
+			strings.Contains(name, "build.") || strings.Contains(name, "webpack") {
 			stack.BuildTools = append(stack.BuildTools, file.Path)
 		}
 	}
@@ -533,12 +533,12 @@ func (o *SecurityOrchestrator) estimateLinesOfCode(files []common.RepositoryFile
 
 func (o *SecurityOrchestrator) identifySecurityRelevantFiles(files []common.RepositoryFile) []string {
 	var securityFiles []string
-	
+
 	securityPatterns := []string{
 		"auth", "login", "security", "crypto", "encrypt", "password",
 		"session", "token", "secret", "key", "cert", "ssl", "tls",
 	}
-	
+
 	for _, file := range files {
 		name := strings.ToLower(file.Path)
 		for _, pattern := range securityPatterns {
@@ -548,7 +548,7 @@ func (o *SecurityOrchestrator) identifySecurityRelevantFiles(files []common.Repo
 			}
 		}
 	}
-	
+
 	return securityFiles
 }
 
@@ -569,12 +569,12 @@ func (o *SecurityOrchestrator) isCodeFile(path string) bool {
 func (o *SecurityOrchestrator) saveState() error {
 	o.mu.RLock()
 	defer o.mu.RUnlock()
-	
+
 	data, err := json.MarshalIndent(o.State, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal state: %w", err)
 	}
-	
+
 	return os.WriteFile(o.StateFile, data, 0644)
 }
 
@@ -583,7 +583,7 @@ func (o *SecurityOrchestrator) updatePhase(phase string) error {
 	o.mu.Lock()
 	o.State.CurrentPhase = phase
 	o.mu.Unlock()
-	
+
 	return o.saveState()
 }
 
@@ -616,22 +616,22 @@ func (o *SecurityOrchestrator) phase6_SynthesizeAndValidateFindings() error {
 func (o *SecurityOrchestrator) phase7_GenerateCodeSecurityReport() (string, error) {
 	fmt.Println("🔄 Phase 7: Generate Code Security Report")
 	reportPath := filepath.Join(o.SessionDir, "security_report.md")
-	
+
 	// Create basic report
-	report := fmt.Sprintf("# Security Analysis Report\n\nSession: %s\nCompleted: %s\n", 
+	report := fmt.Sprintf("# Security Analysis Report\n\nSession: %s\nCompleted: %s\n",
 		o.SessionID, time.Now().Format(time.RFC3339))
-	
+
 	if err := os.WriteFile(reportPath, []byte(report), 0644); err != nil {
 		return "", fmt.Errorf("failed to write report: %w", err)
 	}
-	
+
 	o.mu.Lock()
 	o.State.CurrentPhase = common.PhaseCompleted
 	o.State.FinalReportPath = &reportPath
 	now := time.Now()
 	o.State.CompletedAt = &now
 	o.mu.Unlock()
-	
+
 	return reportPath, o.saveState()
 }
 

@@ -51,7 +51,7 @@ func setConfigDefaults(config *Config) {
 	config.Scanning.Semgrep.Enabled = true
 	config.Scanning.Semgrep.Path = "semgrep"
 	config.Scanning.Semgrep.Config = "comprehensive"
-	
+
 	config.Scanning.TruffleHog.Enabled = true
 	config.Scanning.TruffleHog.Path = "trufflehog"
 	config.Scanning.TruffleHog.VerifySecrets = false
@@ -178,6 +178,9 @@ func MergeConfigWithOptions(config *Config, options *Options) {
 	if options.MinConfidence != 0.8 {
 		config.AIAutomation.MinConfidence = options.MinConfidence
 	}
+	if options.AnthropicAPIKey != "" {
+		config.AIAutomation.APIKey = options.AnthropicAPIKey
+	}
 
 	// Agent validation
 	if options.NoAgentValidation {
@@ -224,11 +227,11 @@ func ConvertConfigToOptions(config *Config) *Options {
 		VerifySecrets:  config.Scanning.TruffleHog.VerifySecrets,
 
 		// AI automation
-		AutoFix:         config.AIAutomation.AutoFix,
-		CreatePR:        config.AIAutomation.CreatePR,
-		CreateIssue:     config.AIAutomation.CreateIssue,
-		AIModel:         config.AIAutomation.Model,
-		MinConfidence:   config.AIAutomation.MinConfidence,
+		AutoFix:       config.AIAutomation.AutoFix,
+		CreatePR:      config.AIAutomation.CreatePR,
+		CreateIssue:   config.AIAutomation.CreateIssue,
+		AIModel:       config.AIAutomation.Model,
+		MinConfidence: config.AIAutomation.MinConfidence,
 
 		// Agent validation
 		NoAgentValidation:    !config.AgentValidation.Enabled,

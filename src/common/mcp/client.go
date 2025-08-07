@@ -35,16 +35,16 @@ func NewClient(config ClientConfig) (*Client, error) {
 	if config.ServerURL == "" {
 		return nil, fmt.Errorf("server URL is required")
 	}
-	
+
 	if config.Timeout == 0 {
 		config.Timeout = 30 * time.Second
 	}
-	
+
 	httpClient := &http.Client{
 		Timeout:   config.Timeout,
 		Transport: config.Transport,
 	}
-	
+
 	client := &Client{
 		serverURL:   config.ServerURL,
 		httpClient:  httpClient,
@@ -52,12 +52,12 @@ func NewClient(config ClientConfig) (*Client, error) {
 		pendingReqs: make(map[string]chan *Response),
 		tools:       make(map[string]Tool),
 	}
-	
+
 	// Initialize connection and discover tools
 	if err := client.initialize(); err != nil {
 		return nil, fmt.Errorf("failed to initialize MCP client: %w", err)
 	}
-	
+
 	return client, nil
 }
 
@@ -65,7 +65,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 func (c *Client) initialize() error {
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
-	
+
 	// Send initialization request
 	resp, err := c.Request(ctx, "initialize", map[string]interface{}{
 		"protocol_version": ProtocolVersion,
@@ -74,11 +74,11 @@ func (c *Client) initialize() error {
 			"version": "1.0.0",
 		},
 	})
-	
+
 	if err != nil {
 		return fmt.Errorf("initialization failed: %w", err)
 	}
-	
+
 	// Parse server capabilities
 	if resp.Result != nil {
 		if serverInfo, ok := resp.Result.(map[string]interface{}); ok {
@@ -92,7 +92,7 @@ func (c *Client) initialize() error {
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -101,7 +101,7 @@ func (c *Client) registerTool(toolData map[string]interface{}) {
 	name, _ := toolData["name"].(string)
 	desc, _ := toolData["description"].(string)
 	params, _ := toolData["parameters"].(map[string]interface{})
-	
+
 	if name != "" {
 		c.mu.Lock()
 		c.tools[name] = Tool{
@@ -116,52 +116,52 @@ func (c *Client) registerTool(toolData map[string]interface{}) {
 // Request sends a request to the MCP server
 func (c *Client) Request(ctx context.Context, method string, params map[string]interface{}) (*Response, error) {
 	requestID := uuid.New().String()
-	
+
 	req := NewRequest(requestID, method, params)
-	
+
 	// Marshal request
 	reqData, err := Marshal(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
-	
+
 	// Create HTTP request
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", c.serverURL, bytes.NewReader(reqData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
-	
+
 	httpReq.Header.Set("Content-Type", "application/json")
-	
+
 	// Send request
 	httpResp, err := c.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 	defer httpResp.Body.Close()
-	
+
 	// Read response
 	respData, err := io.ReadAll(httpResp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response: %w", err)
 	}
-	
+
 	// Parse response
 	msg, err := ParseMessage(respData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse response: %w", err)
 	}
-	
+
 	resp, ok := msg.(*Response)
 	if !ok {
 		return nil, fmt.Errorf("unexpected response type: %T", msg)
 	}
-	
+
 	// Check for errors
 	if resp.Error != nil {
 		return nil, fmt.Errorf("server error: %s (code: %d)", resp.Error.Message, resp.Error.Code)
 	}
-	
+
 	return resp, nil
 }
 
@@ -171,31 +171,31 @@ func (c *Client) CallTool(ctx context.Context, name string, arguments map[string
 	c.mu.RLock()
 	_, exists := c.tools[name]
 	c.mu.RUnlock()
-	
+
 	if !exists {
 		return nil, fmt.Errorf("tool %s not found", name)
 	}
-	
+
 	// Create tool call
 	resp, err := c.Request(ctx, "tools/call", map[string]interface{}{
 		"name":      name,
 		"arguments": arguments,
 	})
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Parse tool result
 	if resp.Result == nil {
 		return nil, fmt.Errorf("empty tool result")
 	}
-	
+
 	resultData, err := json.Marshal(resp.Result)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal tool result: %w", err)
 	}
-	
+
 	var result ToolResult
 	if err := json.Unmarshal(resultData, &result); err != nil {
 		// If unmarshaling fails, wrap the result
@@ -203,7 +203,7 @@ func (c *Client) CallTool(ctx context.Context, name string, arguments map[string
 			Content: resp.Result,
 		}
 	}
-	
+
 	return &result, nil
 }
 
@@ -211,12 +211,12 @@ func (c *Client) CallTool(ctx context.Context, name string, arguments map[string
 func (c *Client) ListTools() []Tool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	
+
 	tools := make([]Tool, 0, len(c.tools))
 	for _, tool := range c.tools {
 		tools = append(tools, tool)
 	}
-	
+
 	return tools
 }
 
@@ -224,7 +224,7 @@ func (c *Client) ListTools() []Tool {
 func (c *Client) GetTool(name string) (Tool, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	
+
 	tool, exists := c.tools[name]
 	return tool, exists
 }
@@ -234,13 +234,13 @@ func (c *Client) Close() error {
 	// Send disconnect notification
 	notif := NewNotification("disconnect", nil)
 	notifData, _ := Marshal(notif)
-	
+
 	req, _ := http.NewRequest("POST", c.serverURL, bytes.NewReader(notifData))
 	req.Header.Set("Content-Type", "application/json")
-	
+
 	// Best effort disconnect
 	c.httpClient.Do(req)
-	
+
 	return nil
 }
 
@@ -250,10 +250,10 @@ func (c *Client) Ping(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	
+
 	if resp.Error != nil {
 		return fmt.Errorf("ping failed: %s", resp.Error.Message)
 	}
-	
+
 	return nil
 }

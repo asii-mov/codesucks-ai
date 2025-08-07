@@ -11,10 +11,10 @@ import (
 	"github.com/asii-mov/codesucks-ai/common"
 	"github.com/asii-mov/codesucks-ai/common/agent"
 	"github.com/asii-mov/codesucks-ai/common/ai"
+	"github.com/asii-mov/codesucks-ai/common/codesucks-ai"
 	"github.com/asii-mov/codesucks-ai/common/github"
 	"github.com/asii-mov/codesucks-ai/common/orchestrator"
 	"github.com/asii-mov/codesucks-ai/common/report"
-	"github.com/asii-mov/codesucks-ai/common/codesucks-ai"
 )
 
 // scanTarget performs security analysis on a single repository
@@ -23,7 +23,7 @@ func scanTarget(target string, options *common.Options) (*common.ScanResult, err
 	if options.OrchestratorMode {
 		return scanWithOrchestrator(target, options)
 	}
-	
+
 	// Legacy scanning mode
 	return scanWithLegacyMode(target, options)
 }
@@ -31,19 +31,19 @@ func scanTarget(target string, options *common.Options) (*common.ScanResult, err
 // scanWithOrchestrator performs security analysis using the AI orchestrator
 func scanWithOrchestrator(target string, options *common.Options) (*common.ScanResult, error) {
 	fmt.Printf("🤖 Starting AI Orchestrator Mode for %s\n", target)
-	
+
 	// Create orchestrator instance
 	orch, err := orchestrator.NewSecurityOrchestrator(options.SessionDir, options.AgentsDir, options)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create orchestrator: %w", err)
 	}
-	
+
 	// Execute the 7-phase security analysis workflow
 	result, err := orch.ExecuteSecurityAnalysis(target)
 	if err != nil {
 		return result, fmt.Errorf("orchestrator analysis failed: %w", err)
 	}
-	
+
 	fmt.Printf("✅ Orchestrator analysis completed successfully\n")
 	return result, nil
 }
@@ -168,10 +168,10 @@ func scanWithLegacyMode(target string, options *common.Options) (*common.ScanRes
 
 	// Filter validated results based on confidence threshold
 	filteredResults := filterValidatedResults(validatedResults, options)
-	
+
 	// Store validated results in scan result
 	result.ValidatedResults = filteredResults
-	
+
 	// Update semgrepJson with filtered results for subsequent processing
 	semgrepJson.Results = extractOriginalResults(filteredResults)
 
@@ -200,7 +200,7 @@ func scanWithLegacyMode(target string, options *common.Options) (*common.ScanRes
 			Findings:                   []common.SemgrepFinding{},
 		}
 	}
-	
+
 	if !options.NoTruffleHog {
 		report.AddTruffleHogToReport(reportData, target, trufflehogJson)
 	}
@@ -364,7 +364,7 @@ func displayScanResults(target string, result *common.ScanResult, options *commo
 	if !options.NoSemgrep {
 		totalVulns := len(result.SemgrepJson.Results)
 		fmt.Printf("├─ Vulnerabilities Found: %d\n", totalVulns)
-		
+
 		if len(result.ValidatedResults) > 0 {
 			legitimateCount := 0
 			filteredCount := 0
@@ -375,12 +375,12 @@ func displayScanResults(target string, result *common.ScanResult, options *commo
 					legitimateCount++
 				}
 			}
-			
+
 			if !options.NoAgentValidation {
 				fmt.Printf("├─ Agent Validation: %d legitimate, %d filtered\n", legitimateCount, filteredCount)
 			}
 		}
-		
+
 		if result.FixesApplied > 0 {
 			fmt.Printf("├─ Auto-fixes Applied: %d\n", result.FixesApplied)
 		}
@@ -533,7 +533,7 @@ func executeAgentValidation(target string, semgrepJson *common.SemgrepJson, sour
 	fmt.Printf("├─ Total vulnerabilities analyzed: %d\n", totalVulnerabilities)
 	fmt.Printf("├─ Legitimate vulnerabilities: %d\n", legitimateCount)
 	fmt.Printf("├─ False positives filtered: %d\n", filteredCount)
-	
+
 	if totalVulnerabilities > 0 {
 		falsePositiveRate := float64(filteredCount) / float64(totalVulnerabilities) * 100
 		fmt.Printf("└─ False positive rate: %.1f%%\n", falsePositiveRate)

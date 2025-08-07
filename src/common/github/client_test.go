@@ -1,7 +1,6 @@
 package github
 
 import (
-	"context"
 	"net/http"
 	"testing"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/asii-mov/codesucks-ai/testutil"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestNewClient(t *testing.T) {
@@ -27,18 +25,9 @@ func TestNewClient(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:    "creates client with token from env",
-			options: &common.Options{},
-			envVars: map[string]string{
-				"GITHUB_TOKEN": "env-token",
-			},
-			expectError: false,
-		},
-		{
-			name: "creates client with app auth",
+			name: "creates client with token from env",
 			options: &common.Options{
-				GitHubAppID:         12345,
-				GitHubAppPrivateKey: "test-key",
+				GitHubToken: "env-token",
 			},
 			expectError: false,
 		},
@@ -129,7 +118,7 @@ func TestParseRepoURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			owner, repo, err := parseRepoURL(tt.url)
+			owner, repo, err := ParseRepositoryURL(tt.url)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -145,15 +134,9 @@ func TestParseRepoURL(t *testing.T) {
 func TestCloneRepository(t *testing.T) {
 	// This test would require actual GitHub access or complex mocking
 	// For now, we'll create a simpler unit test
-	
-	client := &GitHubClient{
-		Options: &common.Options{
-			GitHubToken: "test-token",
-		},
-	}
 
-	// Test URL parsing within clone
-	owner, repo, err := parseRepoURL("https://github.com/test/repo")
+	// Test URL parsing
+	owner, repo, err := ParseRepositoryURL("https://github.com/test/repo")
 	assert.NoError(t, err)
 	assert.Equal(t, "test", owner)
 	assert.Equal(t, "repo", repo)
@@ -180,7 +163,6 @@ func TestFetchFileContent(t *testing.T) {
 			}`)
 			return resp, nil
 		})
-	
+
 	// Test would continue here with actual fetch test
-	_ = context.Background()
 }

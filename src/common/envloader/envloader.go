@@ -47,17 +47,17 @@ func LoadEnvFile() error {
 // ValidateRequiredEnvVars checks if required environment variables are set
 func ValidateRequiredEnvVars(required []string) error {
 	var missing []string
-	
+
 	for _, envVar := range required {
 		if os.Getenv(envVar) == "" {
 			missing = append(missing, envVar)
 		}
 	}
-	
+
 	if len(missing) > 0 {
 		return fmt.Errorf("missing required environment variables: %s", strings.Join(missing, ", "))
 	}
-	
+
 	return nil
 }
 

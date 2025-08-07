@@ -11,11 +11,11 @@ import (
 
 func TestLoadConfig(t *testing.T) {
 	tests := []struct {
-		name        string
-		configPath  string
+		name          string
+		configPath    string
 		configContent string
-		expectError bool
-		validate    func(t *testing.T, config *Config)
+		expectError   bool
+		validate      func(t *testing.T, config *Config)
 	}{
 		{
 			name:       "loads valid config file",
@@ -137,7 +137,7 @@ func TestSetConfigDefaults(t *testing.T) {
 	assert.True(t, config.Scanning.Semgrep.Enabled)
 	assert.Equal(t, "semgrep", config.Scanning.Semgrep.Path)
 	assert.Equal(t, "comprehensive", config.Scanning.Semgrep.Config)
-	
+
 	assert.True(t, config.Scanning.TruffleHog.Enabled)
 	assert.Equal(t, "trufflehog", config.Scanning.TruffleHog.Path)
 	assert.False(t, config.Scanning.TruffleHog.VerifySecrets)
@@ -171,6 +171,9 @@ func TestValidateConfig(t *testing.T) {
 				AgentValidation: AgentValidationConfig{
 					ConfidenceThreshold: 0.7,
 				},
+				Performance: PerformanceConfig{
+					Threads: 10,
+				},
 			},
 			expectError: false,
 		},
@@ -185,6 +188,9 @@ func TestValidateConfig(t *testing.T) {
 				},
 				AgentValidation: AgentValidationConfig{
 					ConfidenceThreshold: 0.7,
+				},
+				Performance: PerformanceConfig{
+					Threads: 10,
 				},
 			},
 			expectError: false,
@@ -283,7 +289,7 @@ func TestMergeConfigWithOptions(t *testing.T) {
 	// Create options that override some values
 	options := &Options{
 		Repo:            "https://github.com/options/repo",
-		ConfigPath:      "comprehensive",
+		ConfigPath:      "security-focused",
 		Threads:         20,
 		OutDir:          "./options-results",
 		AutoFix:         true,
@@ -295,19 +301,19 @@ func TestMergeConfigWithOptions(t *testing.T) {
 
 	// Verify CLI options take precedence
 	assert.Equal(t, "https://github.com/options/repo", config.Target.Repo)
-	assert.Equal(t, "comprehensive", config.Scanning.Semgrep.Config)
+	assert.Equal(t, "security-focused", config.Scanning.Semgrep.Config)
 	assert.Equal(t, 20, config.Performance.Threads)
 	assert.Equal(t, "./options-results", config.Performance.OutputDir)
 	assert.True(t, config.AIAutomation.AutoFix)
 	assert.Equal(t, "test-key", config.AIAutomation.APIKey)
-	
+
 	// Verify config values are preserved when not overridden
 	assert.Equal(t, "claude-3-opus", config.AIAutomation.Model)
 }
 
 func TestGenerateDefaultConfig(t *testing.T) {
 	config := GenerateDefaultConfig()
-	
+
 	assert.NotNil(t, config)
 	assert.True(t, config.Scanning.Semgrep.Enabled)
 	assert.True(t, config.Scanning.TruffleHog.Enabled)

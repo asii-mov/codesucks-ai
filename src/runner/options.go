@@ -15,7 +15,7 @@ import (
 func ParseOptions() (*common.Options, error) {
 	// Load .env file if it exists (ignore error if not found)
 	_ = envloader.LoadEnvFile()
-	
+
 	options := &common.Options{}
 
 	// Target specification
@@ -51,7 +51,7 @@ func ParseOptions() (*common.Options, error) {
 	flag.BoolVar(&options.OrchestratorMode, "orchestrator-mode", false, "Enable AI orchestrator mode with parallel sub-agents")
 	flag.StringVar(&options.SessionDir, "session-dir", "./sessions", "Directory for orchestrator session data")
 	flag.StringVar(&options.AgentsDir, "agents-dir", "./agents", "Directory for Claude Code sub-agent configurations")
-	
+
 	// MCP mode
 	flag.BoolVar(&options.UseMCPMode, "use-mcp-semgrep", false, "Use Semgrep MCP server instead of CLI")
 	flag.StringVar(&options.MCPServerURL, "mcp-server", "", "Semgrep MCP server URL (default: http://localhost:3000)")
@@ -75,7 +75,6 @@ func ParseOptions() (*common.Options, error) {
 	var showHelp bool
 	flag.BoolVar(&showHelp, "h", false, "Show help")
 	flag.BoolVar(&showHelp, "help", false, "Show help")
-	
 
 	flag.Parse()
 
@@ -88,7 +87,6 @@ func ParseOptions() (*common.Options, error) {
 		printPresets()
 		os.Exit(0)
 	}
-
 
 	// Load YAML configuration if specified
 	var config *common.Config
@@ -334,4 +332,3 @@ func printPresets() {
 	fmt.Println("You can also specify a custom .conf file path:")
 	fmt.Println("  codesucks-ai -config /path/to/custom.conf -repo https://github.com/owner/repo")
 }
-

@@ -37,11 +37,11 @@ func TestNewClient(t *testing.T) {
 				},
 			},
 		}
-		
+
 		json.NewEncoder(w).Encode(response)
 	}))
 	defer server.Close()
-	
+
 	tests := []struct {
 		name        string
 		config      ClientConfig
@@ -63,18 +63,18 @@ func TestNewClient(t *testing.T) {
 			expectError: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			client, err := NewClient(tt.config)
-			
+
 			if tt.expectError {
 				assert.Error(t, err)
 				assert.Nil(t, client)
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, client)
-				
+
 				// Verify tools were registered
 				tools := client.ListTools()
 				assert.Len(t, tools, 1)
@@ -89,7 +89,7 @@ func TestRequest(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req Request
 		json.NewDecoder(r.Body).Decode(&req)
-		
+
 		// Echo back request method in response
 		response := Response{
 			ID:      req.ID,
@@ -100,11 +100,11 @@ func TestRequest(t *testing.T) {
 				"params": req.Params,
 			},
 		}
-		
+
 		json.NewEncoder(w).Encode(response)
 	}))
 	defer server.Close()
-	
+
 	// Create client without initialization
 	client := &Client{
 		serverURL:   server.URL,
@@ -113,15 +113,15 @@ func TestRequest(t *testing.T) {
 		pendingReqs: make(map[string]chan *Response),
 		tools:       make(map[string]Tool),
 	}
-	
+
 	ctx := context.Background()
 	resp, err := client.Request(ctx, "test_method", map[string]interface{}{
 		"key": "value",
 	})
-	
+
 	require.NoError(t, err)
 	require.NotNil(t, resp)
-	
+
 	result, ok := resp.Result.(map[string]interface{})
 	require.True(t, ok)
 	assert.Equal(t, "test_method", result["method"])
@@ -132,7 +132,7 @@ func TestCallTool(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req Request
 		json.NewDecoder(r.Body).Decode(&req)
-		
+
 		// Mock tool call response
 		response := Response{
 			ID:      req.ID,
@@ -142,11 +142,11 @@ func TestCallTool(t *testing.T) {
 				"content": "Tool executed successfully",
 			},
 		}
-		
+
 		json.NewEncoder(w).Encode(response)
 	}))
 	defer server.Close()
-	
+
 	// Create client with a registered tool
 	client := &Client{
 		serverURL:   server.URL,
@@ -160,17 +160,17 @@ func TestCallTool(t *testing.T) {
 			},
 		},
 	}
-	
+
 	ctx := context.Background()
-	
+
 	// Test successful tool call
 	result, err := client.CallTool(ctx, "test_tool", map[string]interface{}{
 		"param": "value",
 	})
-	
+
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
-	
+
 	// Test calling non-existent tool
 	_, err = client.CallTool(ctx, "non_existent", nil)
 	assert.Error(t, err)
@@ -230,11 +230,11 @@ func TestParseMessage(t *testing.T) {
 			expectError: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			msg, err := ParseMessage([]byte(tt.data))
-			
+
 			if tt.expectError {
 				assert.Error(t, err)
 			} else {
@@ -250,7 +250,7 @@ func TestPing(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req Request
 		json.NewDecoder(r.Body).Decode(&req)
-		
+
 		if req.Method == "ping" {
 			response := Response{
 				ID:      req.ID,
@@ -265,7 +265,7 @@ func TestPing(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	
+
 	client := &Client{
 		serverURL:   server.URL,
 		httpClient:  &http.Client{Timeout: 5 * time.Second},
@@ -273,7 +273,7 @@ func TestPing(t *testing.T) {
 		pendingReqs: make(map[string]chan *Response),
 		tools:       make(map[string]Tool),
 	}
-	
+
 	ctx := context.Background()
 	err := client.Ping(ctx)
 	assert.NoError(t, err)

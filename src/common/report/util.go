@@ -243,11 +243,11 @@ func cleanSecretType(detectorName string) string {
 // generateSecretDescription creates a description for the secret finding
 func generateSecretDescription(detectorName string, verified bool) string {
 	secretType := cleanSecretType(detectorName)
-	
+
 	if verified {
 		return fmt.Sprintf("✅ Verified %s detected - This secret is valid and poses a security risk", secretType)
 	}
-	
+
 	return fmt.Sprintf("⚠️ Potential %s detected - Verification needed to confirm if this is a valid secret", secretType)
 }
 
@@ -258,7 +258,7 @@ func SortSecretFindings(findings []common.TruffleHogFinding) {
 		if findings[i].Verified != findings[j].Verified {
 			return findings[i].Verified
 		}
-		
+
 		// Then by secret type
 		return findings[i].SecretType < findings[j].SecretType
 	})
