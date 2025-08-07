@@ -105,12 +105,9 @@ jobs:
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v6
       with:
-        version: latest
+        version: v1.61.0
         working-directory: ./src
         args: --timeout=5m
-        skip-cache: false
-        skip-build-cache: false
-        skip-pkg-cache: false
     
     - name: Run go fmt and vet
       working-directory: ./src
