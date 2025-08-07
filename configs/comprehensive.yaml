@@ -1,0 +1,48 @@
+# Comprehensive Configuration - Complete three-layer analysis
+# SAST (Semgrep) + Secret Detection (TruffleHog) + Deep AI Analysis (Orchestrator)
+
+target:
+  repo: "https://github.com/owner/repo"  # Replace with your repository
+
+scanning:
+  semgrep:
+    enabled: true
+    path: "semgrep"
+    config: "comprehensive"
+    custom_flags: "--timeout 600 --max-target-bytes 2000000"
+  trufflehog:
+    enabled: true
+    path: "trufflehog"
+    verify_secrets: true
+
+ai_automation:
+  enabled: true
+  model: "claude-3-5-sonnet-20241022"
+  min_confidence: 0.8
+  auto_fix: true
+  create_pr: true
+  create_issue: true
+
+github:
+  auth_method: "token"  # Use GITHUB_TOKEN environment variable
+  # For GitHub App authentication:
+  # auth_method: "app"
+  # app_id: 123456
+  # app_key_file: "/path/to/private-key.pem"
+
+performance:
+  threads: 10
+  output_dir: "./results"
+  debug: false
+
+agent_validation:
+  enabled: true
+  confidence_threshold: 0.7
+
+# Deep AI Analysis Layer (enable with -orchestrator-mode flag)
+orchestrator:
+  enabled: false  # Enable via CLI flag to activate enhanced analysis
+  session_dir: "./sessions"
+  agents_dir: "./agents"
+  timeout: 3600
+  max_agents: 8

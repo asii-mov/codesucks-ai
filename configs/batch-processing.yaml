@@ -1,0 +1,37 @@
+# Batch Processing Configuration - For scanning multiple repositories
+# Optimized for scanning many repositories efficiently
+
+target:
+  repos_file: "repos.txt"  # File containing list of repository URLs
+
+scanning:
+  semgrep:
+    enabled: true
+    path: "semgrep"
+    config: "codesucks-ai"
+    custom_flags: "--timeout 300 --max-target-bytes 1000000"
+  trufflehog:
+    enabled: true
+    path: "trufflehog"
+    verify_secrets: false  # Faster processing
+
+ai_automation:
+  enabled: false  # Disabled for batch processing speed
+  model: "claude-3-5-sonnet-20241022"
+  min_confidence: 0.8
+  auto_fix: false
+  create_pr: false
+  create_issue: false
+
+github:
+  auth_method: "app"  # Recommended for higher rate limits
+  app_id: 123456  # Replace with your GitHub App ID
+  app_key_file: "/path/to/private-key.pem"
+
+performance:
+  threads: 15  # Higher concurrency for batch processing
+  output_dir: "./batch-results"
+  debug: false
+
+agent_validation:
+  enabled: false  # Disabled for speed

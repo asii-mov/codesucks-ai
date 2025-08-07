@@ -1,0 +1,223 @@
+name: Test
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  GO_VERSION: '1.21'
+
+jobs:
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+        cache-dependency-path: src/go.sum
+    
+    - name: Install dependencies
+      working-directory: ./src
+      run: |
+        go mod download
+        go mod verify
+    
+    - name: Run unit tests
+      working-directory: ./src
+      run: make test-unit
+    
+    - name: Generate coverage report
+      working-directory: ./src
+      run: make test-coverage
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./src/coverage/coverage.out
+        flags: unittests
+        name: codecov-umbrella
+    
+    - name: Archive coverage reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report
+        path: src/coverage/
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+        cache-dependency-path: src/go.sum
+    
+    - name: Install Semgrep
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install semgrep
+    
+    - name: Create test .env file
+      run: |
+        cp .env.example .env
+        echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> .env
+        echo "TEST_MODE=true" >> .env
+    
+    - name: Run integration tests
+      working-directory: ./src
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: make test-integration
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+        cache-dependency-path: src/go.sum
+    
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v6
+      with:
+        version: v1.61.0
+        working-directory: ./src
+        args: --timeout=5m
+    
+    - name: Run go fmt and vet
+      working-directory: ./src
+      run: |
+        go fmt ./...
+        go vet ./...
+
+  race-condition:
+    name: Race Condition Tests
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+        cache-dependency-path: src/go.sum
+    
+    - name: Run race condition tests
+      working-directory: ./src
+      run: make test-race
+
+  benchmark:
+    name: Benchmark Tests
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+        cache-dependency-path: src/go.sum
+    
+    - name: Run benchmark tests
+      working-directory: ./src
+      run: make test-bench
+    
+    - name: Save benchmark results
+      uses: actions/upload-artifact@v4
+      with:
+        name: benchmark-results
+        path: src/benchmark-results/
+
+  build:
+    name: Build Binary
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+    
+    strategy:
+      matrix:
+        os: [linux, darwin, windows]
+        arch: [amd64, arm64]
+        exclude:
+          - os: windows
+            arch: arm64
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+        cache-dependency-path: src/go.sum
+    
+    - name: Build binary
+      working-directory: ./src
+      env:
+        GOOS: ${{ matrix.os }}
+        GOARCH: ${{ matrix.arch }}
+      run: |
+        mkdir -p ../build
+        go build -o ../build/codesucks-ai-${{ matrix.os }}-${{ matrix.arch }} ./cmd/codesucks-ai
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: codesucks-ai-${{ matrix.os }}-${{ matrix.arch }}
+        path: build/
+
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./docker/Dockerfile
+        push: false
+        tags: codesucks-ai:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
