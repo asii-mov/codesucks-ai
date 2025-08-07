@@ -102,15 +102,21 @@ jobs:
         cache: true
         cache-dependency-path: src/go.sum
     
-    - name: Install golangci-lint
+    - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v6
       with:
         version: latest
         working-directory: ./src
+        args: --timeout=5m
+        skip-cache: false
+        skip-build-cache: false
+        skip-pkg-cache: false
     
-    - name: Run linters
+    - name: Run go fmt and vet
       working-directory: ./src
-      run: make lint
+      run: |
+        go fmt ./...
+        go vet ./...
 
   race-condition:
     name: Race Condition Tests

@@ -1,0 +1,109 @@
+# golangci-lint configuration
+# https://golangci-lint.run/usage/configuration/
+
+run:
+  timeout: 5m
+  tests: true
+  skip-dirs:
+    - vendor
+    - testdata
+    - examples
+
+linters:
+  enable:
+    - gofmt
+    - govet
+    - errcheck
+    - staticcheck
+    - unused
+    - gosimple
+    - ineffassign
+    - typecheck
+    - gocritic
+    - goimports
+    - revive
+    - misspell
+
+  disable:
+    - gosec # Temporarily disabled as it may flag security analysis code
+    - exhaustive
+    - gochecknoglobals
+    - gochecknoinits
+    - goconst
+    - godox
+    - funlen
+    - lll
+    - wsl
+
+linters-settings:
+  gofmt:
+    simplify: true
+  
+  govet:
+    check-shadowing: true
+  
+  errcheck:
+    check-type-assertions: true
+    check-blank: false
+  
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - dupImport
+      - ifElseChain
+      - octalLiteral
+      - whyNoLint
+      - wrapperFunc
+  
+  revive:
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unreachable-code
+
+issues:
+  exclude-rules:
+    # Exclude some linters from running on tests files.
+    - path: _test\.go
+      linters:
+        - gocritic
+        - errcheck
+        - dupl
+        - gosec
+    
+    # Exclude known issues in vendor and generated files
+    - path: vendor/
+      linters:
+        - typecheck
+        - unused
+    
+    # Allow TODO and FIXME comments
+    - text: "TODO|FIXME"
+      linters:
+        - godox
+
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false
