@@ -11,7 +11,7 @@ import (
 	"github.com/asii-mov/codesucks-ai/common"
 	"github.com/asii-mov/codesucks-ai/common/agent"
 	"github.com/asii-mov/codesucks-ai/common/ai"
-	"github.com/asii-mov/codesucks-ai/common/codesucks-ai"
+	"github.com/asii-mov/codesucks-ai/common/codesucksai"
 	"github.com/asii-mov/codesucks-ai/common/github"
 	"github.com/asii-mov/codesucks-ai/common/orchestrator"
 	"github.com/asii-mov/codesucks-ai/common/report"
