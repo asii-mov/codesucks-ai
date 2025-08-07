@@ -110,3 +110,7 @@ test-results/
 coverage/
 *.xml
 *.html.bak
+*.coverprofile
+coverage.html
+coverage.txt
+benchmark-results/

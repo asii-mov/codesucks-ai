@@ -1,0 +1,36 @@
+# Basic Configuration - Fast scanning with minimal rules
+# Equivalent to basic.conf preset
+
+target:
+  repo: "https://github.com/owner/repo"  # Replace with your repository
+
+scanning:
+  semgrep:
+    enabled: true
+    path: "semgrep"
+    config: "basic"
+    custom_flags: "--timeout 120 --max-target-bytes 500000"
+  trufflehog:
+    enabled: false  # Disabled for speed
+    path: "trufflehog"
+    verify_secrets: false
+
+ai_automation:
+  enabled: false
+  model: "claude-3-5-sonnet-20241022"
+  min_confidence: 0.8
+  auto_fix: false
+  create_pr: false
+  create_issue: false
+
+github:
+  auth_method: "token"  # Use GITHUB_TOKEN environment variable
+
+performance:
+  threads: 5  # Reduced for lighter load
+  output_dir: "./results"
+  debug: false
+
+agent_validation:
+  enabled: false  # Disabled for speed
+  confidence_threshold: 0.7

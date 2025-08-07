@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  codesucks-ai-orchestrator:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: codesucks-ai-orchestrator
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - CLAUDE_AGENTS_DIR=/app/claude-agents
+      - CLAUDE_SESSION_DIR=/app/sessions
+      - CLAUDE_CODE_LOG_LEVEL=INFO
+    volumes:
+      # Persistent storage for sessions and results
+      - ./sessions:/app/sessions
+      - ./results:/app/results
+      - ./claude-agents:/app/claude-agents
+      - ./vulnerable_code:/app/vulnerable_code
+      # Mount agent configurations
+      - ../agents:/app/agents:ro
+      # Mount orchestrator configuration
+      - ../configs:/app/configs:ro
+    working_dir: /app
+    networks:
+      - codesucks-network
+    # Resource limits for security
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+    # Security settings
+    security_opt:
+      - no-new-privileges:true
+    read_only: false  # Needs write access for sessions and results
+    tmpfs:
+      - /tmp:noexec,nosuid,size=1G
+    # Default command runs in orchestrator mode
+    command: [
+      "-orchestrator-mode",
+      "-config-file", "/app/configs/orchestrator.yaml",
+      "-session-dir", "/app/sessions", 
+      "-agents-dir", "/app/agents",
+      "-out", "/app/results"
+    ]
+
+  # Optional: Claude Code SDK service for advanced orchestration
+  claude-code-sdk:
+    image: python:3.11-alpine
+    container_name: claude-code-sdk-service
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - CLAUDE_SESSION_DIR=/app/sessions
+    volumes:
+      - ./sessions:/app/sessions
+      - ../agents:/app/agents:ro
+    working_dir: /app
+    networks:
+      - codesucks-network
+    command: ["python", "-c", "import time; time.sleep(86400)"]  # Keep alive
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+
+networks:
+  codesucks-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'true'
+
+volumes:
+  sessions:
+    driver: local
+  results:
+    driver: local
+  claude-agents:
+    driver: local
+  vulnerable-code:
+    driver: local
