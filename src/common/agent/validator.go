@@ -134,8 +134,8 @@ func (av *AgentValidator) analyzeProjectStructure(owner, repo, branch, tempDir s
 			return err
 		}
 
-		relPath, _ := filepath.Rel(tempDir, path)
-		if relPath == "." || strings.HasPrefix(relPath, ".git") {
+		relPath, err := filepath.Rel(tempDir, path)
+		if err != nil || relPath == "." || strings.HasPrefix(relPath, ".git") {
 			return nil
 		}
 

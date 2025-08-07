@@ -56,8 +56,8 @@ func GenerateHTML(reportData *common.ReportData, outDir string) (string, error) 
 	// Execute template with report data
 	err = tmpl.Execute(file, reportData)
 	if err != nil {
-		// Clean up incomplete file
-		os.Remove(outPath)
+		// Clean up incomplete file - ignore error as it's cleanup
+		_ = os.Remove(outPath)
 		return "", fmt.Errorf("failed to execute HTML template: %v", err)
 	}
 

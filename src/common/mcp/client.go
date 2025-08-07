@@ -98,19 +98,21 @@ func (c *Client) initialize() error {
 
 // registerTool registers a tool from server response
 func (c *Client) registerTool(toolData map[string]interface{}) {
-	name, _ := toolData["name"].(string)
+	name, ok := toolData["name"].(string)
+	if !ok || name == "" {
+		return
+	}
+
 	desc, _ := toolData["description"].(string)
 	params, _ := toolData["parameters"].(map[string]interface{})
 
-	if name != "" {
-		c.mu.Lock()
-		c.tools[name] = Tool{
-			Name:        name,
-			Description: desc,
-			Parameters:  params,
-		}
-		c.mu.Unlock()
+	c.mu.Lock()
+	c.tools[name] = Tool{
+		Name:        name,
+		Description: desc,
+		Parameters:  params,
 	}
+	c.mu.Unlock()
 }
 
 // Request sends a request to the MCP server
@@ -233,13 +235,21 @@ func (c *Client) GetTool(name string) (Tool, bool) {
 func (c *Client) Close() error {
 	// Send disconnect notification
 	notif := NewNotification("disconnect", nil)
-	notifData, _ := Marshal(notif)
+	notifData, err := Marshal(notif)
+	if err != nil {
+		// Log error but don't fail close
+		return nil
+	}
 
-	req, _ := http.NewRequest("POST", c.serverURL, bytes.NewReader(notifData))
+	req, err := http.NewRequest("POST", c.serverURL, bytes.NewReader(notifData))
+	if err != nil {
+		// Log error but don't fail close
+		return nil
+	}
 	req.Header.Set("Content-Type", "application/json")
 
-	// Best effort disconnect
-	c.httpClient.Do(req)
+	// Best effort disconnect - ignore errors as server may be down
+	_, _ = c.httpClient.Do(req)
 
 	return nil
 }

@@ -197,7 +197,9 @@ func readConfigFile(configPath string) []string {
 	if err != nil {
 		return nil
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
