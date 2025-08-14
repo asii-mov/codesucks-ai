@@ -2,6 +2,9 @@
 
 AI-powered security analysis tool combining static analysis with intelligent vulnerability detection and automated remediation.
 
+<img width="1196" height="560" alt="image" src="https://github.com/user-attachments/assets/9e2a280f-aa76-434b-8067-cc7a235f8947" />
+
+
 ## Features
 
 - **Three-layer analysis**: SAST (Semgrep), Secret Detection (TruffleHog), AI Deep Analysis (Claude)
