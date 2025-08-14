@@ -8,7 +8,7 @@ AI-powered security analysis tool combining static analysis with intelligent vul
 ## Features
 
 - **Three-layer analysis**: SAST (Semgrep), Secret Detection (TruffleHog), AI Deep Analysis (Claude)
-- **Automated fixes**: Generate and apply security patches via GitHub PRs
+- **Automated fixes**: Generate and apply security patches via [GitHub PRs](https://github.com/asii-mov/NodeGoat-AI-test/pull/1)
 - **Low false positives**: AI-powered context analysis reduces noise by 95%
 - **Multi-language support**: Java, Python, JavaScript, Go, Ruby, PHP, C/C++, C#
 - **HTML reports**: Comprehensive reports with executive summaries
