@@ -401,8 +401,8 @@ func (o *SecurityOrchestrator) phase5_ExecuteParallelCodeAnalysis(repoContext *c
 				return
 			}
 
-			// Create agent session
-			agentProcess, err := o.ClaudeSDK.CreateAgentSession(agentInfo.AgentType, agentInfo.AnalysisID, analysis.FileScope)
+			// Create agent session with predefined ID
+			agentProcess, err := o.ClaudeSDK.CreateAgentSessionWithID(agentInfo.AgentID, agentInfo.AgentType, agentInfo.AnalysisID, analysis.FileScope)
 			if err != nil {
 				errors <- fmt.Errorf("failed to create agent session: %w", err)
 				return
@@ -937,7 +937,7 @@ func (o *SecurityOrchestrator) convertToValidatedResults() []common.ValidatedRes
 // parseAgentResults reads and parses results from a single agent
 func (o *SecurityOrchestrator) parseAgentResults(agent common.AnalysisAgent) []common.ValidatedResult {
 	// Construct path to agent results file
-	agentDir := filepath.Join(o.SessionDir, "sub_agents", fmt.Sprintf("agent_%s_%s", agent.AgentType, agent.AgentID))
+	agentDir := filepath.Join(o.SessionDir, "sub_agents", agent.AgentID)
 	resultsFile := filepath.Join(agentDir, "results.json")
 
 	// Check if results file exists

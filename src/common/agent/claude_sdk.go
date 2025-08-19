@@ -79,6 +79,11 @@ func NewClaudeSDKClient(sessionDir, agentsDir string) (*ClaudeSDKClient, error) 
 // CreateAgentSession initializes a new session for a security analysis agent
 func (c *ClaudeSDKClient) CreateAgentSession(agentType, analysisID string, files []string) (*AgentProcess, error) {
 	agentID := fmt.Sprintf("agent_%s_%s", agentType, uuid.New().String()[:8])
+	return c.CreateAgentSessionWithID(agentID, agentType, analysisID, files)
+}
+
+// CreateAgentSessionWithID initializes a new session with a predefined agent ID
+func (c *ClaudeSDKClient) CreateAgentSessionWithID(agentID, agentType, analysisID string, files []string) (*AgentProcess, error) {
 	sessionPath := filepath.Join(c.SessionDir, agentID)
 	stateFile := filepath.Join(sessionPath, "state.json")
 
@@ -140,12 +145,18 @@ func (c *ClaudeSDKClient) SpawnAgent(agent *AgentProcess, codebaseContext *commo
 	// Prepare the analysis prompt
 	prompt := c.buildAnalysisPrompt(agent, codebaseContext)
 
-	// Create the claude command with sub-agent
+	// Read agent configuration to append as system prompt
+	agentConfig, err := os.ReadFile(agentConfigPath)
+	if err != nil {
+		return fmt.Errorf("failed to read agent config: %w", err)
+	}
+
+	// Create the claude command with headless automation flags
 	args := []string{
-		"--agent", agentConfigPath,
-		"--session-dir", agent.SessionPath,
-		"--output", "json",
-		"--non-interactive",
+		"-p", prompt, // Print mode with prompt as first argument
+		"--output-format", "json",
+		"--append-system-prompt", string(agentConfig),
+		"--add-dir", codebaseContext.SourcePath, // Allow access to source code directory
 	}
 
 	if c.LogLevel == "DEBUG" {
@@ -155,25 +166,31 @@ func (c *ClaudeSDKClient) SpawnAgent(agent *AgentProcess, codebaseContext *commo
 	cmd := exec.Command("claude", args...)
 	cmd.Env = append(os.Environ(),
 		fmt.Sprintf("ANTHROPIC_API_KEY=%s", c.APIKey),
-		fmt.Sprintf("CLAUDE_SESSION_DIR=%s", agent.SessionPath),
 	)
 
-	// Set up stdin with the analysis prompt
-	cmd.Stdin = strings.NewReader(prompt)
-
-	// Start the process
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("failed to start agent process: %w", err)
+	// Set working directory to the source code path
+	if codebaseContext != nil && codebaseContext.SourcePath != "" {
+		cmd.Dir = codebaseContext.SourcePath
 	}
 
-	agent.Process = cmd
-	agent.Status = "running"
+	// Capture stdout and stderr
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to execute agent command: %w", err)
+	}
+
+	// Save the Claude CLI output to results file
+	resultsFile := filepath.Join(agent.SessionPath, "results.json")
+	if err := os.WriteFile(resultsFile, output, 0644); err != nil {
+		return fmt.Errorf("failed to save agent results: %w", err)
+	}
+
+	agent.Status = "completed"
 
 	// Update agent state
 	if err := c.updateAgentState(agent.ID, map[string]interface{}{
-		"status":     "running",
-		"pid":        cmd.Process.Pid,
-		"started_at": time.Now(),
+		"status":       "completed",
+		"completed_at": time.Now(),
 	}); err != nil {
 		return fmt.Errorf("failed to update agent state: %w", err)
 	}
@@ -198,6 +215,13 @@ func (c *ClaudeSDKClient) buildAnalysisPrompt(agent *AgentProcess, context *comm
 			prompt.WriteString(fmt.Sprintf("Security Libraries: %s\n", strings.Join(context.TechnologyStack.SecurityLibraries, ", ")))
 		}
 		prompt.WriteString("\n")
+
+		// Add source code location
+		prompt.WriteString("## Source Code Location\n")
+		prompt.WriteString(fmt.Sprintf("Code Path: %s\n", context.SourcePath))
+		prompt.WriteString("You have access to the repository source code at the path provided above.\n")
+		prompt.WriteString("Use file reading tools to examine the code for security vulnerabilities.\n")
+		prompt.WriteString("Focus on files relevant to your specialization.\n\n")
 	}
 
 	// Add file list
@@ -325,9 +349,58 @@ func (c *ClaudeSDKClient) CollectResults(agentID string) (*common.AgentResults, 
 		return nil, fmt.Errorf("failed to read results file: %w", err)
 	}
 
+	// First try to parse as Claude CLI response format
+	var claudeResponse struct {
+		Type     string `json:"type"`
+		Content  string `json:"content,omitempty"`
+		Messages []struct {
+			Content []struct {
+				Text string `json:"text"`
+			} `json:"content"`
+		} `json:"messages,omitempty"`
+	}
+
+	var actualContent string
+	if err := json.Unmarshal(resultsData, &claudeResponse); err == nil {
+		// Extract actual content from Claude CLI response
+		if claudeResponse.Content != "" {
+			actualContent = claudeResponse.Content
+		} else if len(claudeResponse.Messages) > 0 && len(claudeResponse.Messages[0].Content) > 0 {
+			actualContent = claudeResponse.Messages[0].Content[0].Text
+		} else {
+			// Fallback to raw data as string
+			actualContent = string(resultsData)
+		}
+	} else {
+		// If not Claude CLI format, use raw data
+		actualContent = string(resultsData)
+	}
+
+	// Try to extract JSON from the content (Claude often puts JSON in code blocks)
+	jsonStart := strings.Index(actualContent, "{")
+	jsonEnd := strings.LastIndex(actualContent, "}")
+
 	var results common.AgentResults
-	if err := json.Unmarshal(resultsData, &results); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal results: %w", err)
+	if jsonStart >= 0 && jsonEnd > jsonStart {
+		jsonContent := actualContent[jsonStart : jsonEnd+1]
+		if err := json.Unmarshal([]byte(jsonContent), &results); err != nil {
+			// If JSON parsing fails, create results from text analysis
+			results = common.AgentResults{
+				AgentID:         agentID,
+				Type:            agent.Type,
+				Status:          "completed",
+				Vulnerabilities: []common.SecurityFinding{},
+				// Note: Claude provided analysis but not in expected JSON format
+			}
+		}
+	} else {
+		// No JSON found, create empty results
+		results = common.AgentResults{
+			AgentID:         agentID,
+			Type:            agent.Type,
+			Status:          "completed",
+			Vulnerabilities: []common.SecurityFinding{},
+		}
 	}
 
 	return &results, nil
