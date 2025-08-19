@@ -29,7 +29,7 @@ func ParseOptions() (*common.Options, error) {
 	flag.BoolVar(&options.NoTruffleHog, "no-trufflehog", false, "Skip TruffleHog secret scanning")
 	flag.StringVar(&options.TruffleHogPath, "trufflehog-path", "trufflehog", "Path to trufflehog binary")
 	flag.BoolVar(&options.VerifySecrets, "verify-secrets", false, "Only return verified secrets from TruffleHog")
-	flag.StringVar(&options.OutDir, "out", "./results", "Output directory for reports and results")
+	flag.StringVar(&options.OutDir, "out", "./scans", "Output directory for reports and results")
 
 	// Configuration presets
 	var listPresets bool
@@ -58,6 +58,14 @@ func ParseOptions() (*common.Options, error) {
 	flag.BoolVar(&options.EnableAST, "enable-ast", false, "Enable AST analysis in MCP mode")
 	flag.BoolVar(&options.EnableCustomRules, "enable-custom-rules", false, "Enable custom Semgrep rules in MCP mode")
 	flag.StringVar(&options.MinSeverity, "min-severity", "", "Minimum severity to report (CRITICAL, HIGH, MEDIUM, LOW)")
+
+	// Matrix Build Options
+	flag.BoolVar(&options.MatrixBuild, "matrix-build", true, "Enable automatic matrix build based on detected languages/frameworks")
+	flag.StringVar(&options.ForceLanguage, "force-language", "", "Override detected primary language")
+	flag.StringVar(&options.ForceFramework, "force-framework", "", "Override detected primary framework")
+	flag.StringVar(&options.AdditionalRulesets, "additional-rulesets", "", "Comma-separated list of additional Semgrep rulesets")
+	flag.Float64Var(&options.LanguageThreshold, "language-threshold", 10.0, "Minimum percentage to consider a language significant")
+	flag.BoolVar(&options.DisableAutoDetect, "disable-auto-detect", false, "Disable automatic language/framework detection")
 
 	// GitHub integration
 	flag.StringVar(&options.GitHubToken, "github-token", "", "GitHub personal access token (or use GITHUB_TOKEN env var)")
@@ -114,6 +122,37 @@ func ParseOptions() (*common.Options, error) {
 	}
 	if options.AnthropicAPIKey != "" {
 		mergedOptions.AnthropicAPIKey = options.AnthropicAPIKey
+	}
+
+	// Preserve orchestrator mode CLI overrides (fix for the bug!)
+	if options.OrchestratorMode {
+		mergedOptions.OrchestratorMode = options.OrchestratorMode
+	}
+	if options.SessionDir != "" && options.SessionDir != "./sessions" {
+		mergedOptions.SessionDir = options.SessionDir
+	}
+	if options.AgentsDir != "" && options.AgentsDir != "./agents" {
+		mergedOptions.AgentsDir = options.AgentsDir
+	}
+
+	// Preserve matrix build CLI overrides
+	if options.MatrixBuild {
+		mergedOptions.MatrixBuild = options.MatrixBuild
+	}
+	if options.DisableAutoDetect {
+		mergedOptions.DisableAutoDetect = options.DisableAutoDetect
+	}
+	if options.ForceLanguage != "" {
+		mergedOptions.ForceLanguage = options.ForceLanguage
+	}
+	if options.ForceFramework != "" {
+		mergedOptions.ForceFramework = options.ForceFramework
+	}
+	if options.AdditionalRulesets != "" {
+		mergedOptions.AdditionalRulesets = options.AdditionalRulesets
+	}
+	if options.LanguageThreshold != 10.0 { // Default is 10.0
+		mergedOptions.LanguageThreshold = options.LanguageThreshold
 	}
 
 	// Load environment variables if flags not provided
@@ -234,7 +273,7 @@ func printUsage() {
 	fmt.Println("  -trufflehog-path string Path to trufflehog binary (default \"trufflehog\")")
 	fmt.Println("  -verify-secrets     Only return verified secrets from TruffleHog")
 	fmt.Println("  -list-presets       List available configuration presets")
-	fmt.Println("  -out string         Output directory for reports (default \"./results\")")
+	fmt.Println("  -out string         Output directory for reports (default \"./scans\")")
 	fmt.Println()
 	fmt.Println("AI AUTOMATION OPTIONS:")
 	fmt.Println("  -auto-fix           Enable AI-powered automatic vulnerability fixes")

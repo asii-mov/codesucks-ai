@@ -1,0 +1,14 @@
+{
+  "agent_id": "agent_code-auth-analyser_4e86b30a",
+  "agent_type": "code-auth-analyser",
+  "analysis_id": "analysis_auth",
+  "completed_at": "2025-08-17T22:03:50.528504483+01:00",
+  "errors": null,
+  "files": [],
+  "files_processed": null,
+  "last_update": "2025-08-17T22:03:50.528617283+01:00",
+  "progress": 0,
+  "results": [],
+  "start_time": "2025-08-17T21:55:51.483471549+01:00",
+  "status": "completed"
+}

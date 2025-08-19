@@ -1,14 +1,16 @@
 # AI Orchestrator Mode
 
-The AI Orchestrator Mode enhances codesucks-ai's comprehensive scanning with a sophisticated deep analysis layer using Claude Code SDK sub-agents. This mode adds an advanced AI analysis layer on top of traditional SAST and secret detection, implementing the architecture defined in `docs/sast-agent.md`.
+The AI Orchestrator Mode enhances codesucks-ai's comprehensive scanning with a sophisticated deep analysis layer using Claude Code SDK sub-agents. This mode adds an advanced AI analysis layer on top of traditional SAST and secret detection.
 
-## 🚀 Overview
+## Overview
 
 The orchestrator mode provides **enhanced comprehensive analysis** through three integrated layers:
 
-1. **Static Analysis** (Semgrep) - Traditional SAST scanning with configurable rulesets
-2. **Secret Detection** (TruffleHog) - API keys, credentials, and sensitive data detection
-3. **Deep AI Analysis** (Orchestrator) - 8 specialized agents executing advanced vulnerability analysis
+1. **Static Analysis** (Semgrep via MCP or CLI) - Traditional SAST scanning with configurable rulesets
+2. **Secret Detection** (TruffleHog) - API keys, credentials, and sensitive data detection  
+3. **Deep AI Analysis** (Orchestrator) - 5 specialized Claude Code subagents executing advanced vulnerability analysis
+
+**Status**: FULLY FUNCTIONAL - All orchestrator issues have been resolved
 
 The orchestrator executes a **7-phase deep analysis workflow**:
 
@@ -16,38 +18,63 @@ The orchestrator executes a **7-phase deep analysis workflow**:
 2. **Analyze Codebase Structure** - Detect languages, frameworks, entry points
 3. **Map Entry Points and Data Flow** - Identify input sources and dangerous sinks
 4. **Decompose into Parallel Analyses** - Create specialized analysis tasks
-5. **Execute Parallel Code Analysis** - Run 8 specialized security agents simultaneously
+5. **Execute Parallel Code Analysis** - Run 5 specialized security agents simultaneously
 6. **Synthesize and Validate Findings** - Deduplicate and validate results
 7. **Generate Code Security Report** - Create comprehensive developer-friendly reports
 
-## 🤖 Specialized Security Agents
+## Specialized Security Agents
 
-The orchestrator coordinates 8 specialized Claude Code sub-agents:
+The orchestrator coordinates 5 specialized Claude Code sub-agents:
 
-| Agent | Focus Area | Capabilities |
-|-------|------------|-------------|
-| **code-injection-analyser** | SQL, NoSQL, LDAP, OS Command injection | Data flow analysis, parameterization validation |
-| **code-xss-analyser** | Reflected, Stored, DOM-based XSS | Output encoding analysis, template security |
-| **code-path-analyser** | Path traversal, file inclusion | Directory validation, symlink detection |
-| **code-crypto-analyser** | Cryptographic implementation flaws | Algorithm analysis, key management review |
-| **code-auth-analyser** | Authentication, authorization flaws | Session management, access control validation |
-| **code-deserial-analyser** | Unsafe deserialization | Object injection, gadget chain analysis |
-| **code-xxe-analyser** | XML external entity vulnerabilities | XML parser configuration, entity validation |
-| **code-race-analyser** | Race conditions, TOCTOU vulnerabilities | Concurrency analysis, synchronization review |
+| Agent | Focus Area | Capabilities | Status |
+|-------|------------|-------------|---------|
+| **code-injection-analyser** | SQL, NoSQL, LDAP, OS Command injection | Data flow analysis, parameterization validation | Working |
+| **code-xss-analyser** | Reflected, Stored, DOM-based XSS | Output encoding analysis, template security | Working |
+| **code-path-analyser** | Path traversal, file inclusion | Directory validation, symlink detection | Working |
+| **code-crypto-analyser** | Cryptographic implementation flaws | Algorithm analysis, key management review | Working |
+| **code-auth-analyser** | Authentication, authorization flaws | Session management, access control validation | Working |
+
+Additional agents available but not used in current implementation:
+- **code-deserial-analyser** - Unsafe deserialization analysis
+- **code-xxe-analyser** - XML external entity vulnerabilities  
+- **code-race-analyser** - Race conditions and TOCTOU vulnerabilities
 
 ## 🛠️ Quick Start
 
 ### Prerequisites
 
-- **Docker** (recommended) or **Go 1.21+**
+- **Claude Code CLI** - Required for subagent spawning (must be in PATH)
+- **uv** - Python virtual environment manager (for MCP setup)
+- **Go 1.21+** - For building the application  
 - **Anthropic API Key** - Get from [Anthropic Console](https://console.anthropic.com)
 - **GitHub Token** - Create a [Personal Access Token](https://github.com/settings/tokens)
 
 ### Environment Setup
 
+**Simple Setup (Recommended):**
+```bash
+# Install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Create .env file with your credentials
+cat > .env << EOF
+ANTHROPIC_API_KEY=sk-ant-api03-xxxxxxxxxxxxx
+GITHUB_TOKEN=github_pat_xxxxxxxxxxxxx
+EOF
+
+# One-command setup
+./run-orchestrator.sh --setup-only
+```
+
+**Manual Setup (if needed):**
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-api03-xxxxxxxxxxxxx"
 export GITHUB_TOKEN="github_pat_xxxxxxxxxxxxx"
+
+# Setup MCP environment
+uv venv mcp-env
+source mcp-env/bin/activate
+uv pip install semgrep-mcp semgrep
 ```
 
 ### Run Enhanced Comprehensive Analysis

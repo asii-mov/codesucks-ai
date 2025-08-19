@@ -5,6 +5,8 @@ This document provides practical examples for different use cases and scenarios.
 ## Table of Contents
 
 - [Basic Scanning](#basic-scanning)
+- [Orchestrator Mode](#orchestrator-mode)
+- [MCP Integration](#mcp-integration)
 - [AI-Powered Fixes](#ai-powered-fixes)
 - [Batch Processing](#batch-processing)
 - [CI/CD Integration](#cicd-integration)
@@ -45,6 +47,126 @@ Scan a private repository with proper authentication:
   -repo https://github.com/company/private-repo \
   -config security-focused \
   -out ./private-scan-results
+```
+
+## Orchestrator Mode
+
+### Basic Orchestrator Analysis
+
+Run deep AI analysis with 5 specialized Claude Code subagents:
+
+```bash
+# Basic orchestrator mode (requires Claude CLI)
+./build/codesucks-ai \
+  -orchestrator-mode \
+  -repo https://github.com/owner/repo
+
+# With .env file (recommended - loaded automatically)
+# Create .env file with your credentials
+cat > .env << EOF
+GITHUB_TOKEN=your_token
+ANTHROPIC_API_KEY=your_key
+EOF
+./build/codesucks-ai -orchestrator-mode -repo https://github.com/owner/repo
+```
+
+### Orchestrator with Custom Configuration
+
+```bash
+# Use orchestrator configuration preset
+./build/codesucks-ai \
+  -orchestrator-mode \
+  -config-file configs/orchestrator.yaml \
+  -repo https://github.com/owner/repo
+
+# Custom session and agents directories
+./build/codesucks-ai \
+  -orchestrator-mode \
+  -session-dir ./custom-sessions \
+  -agents-dir ./custom-agents \
+  -repo https://github.com/owner/repo
+```
+
+### Orchestrator Results
+
+The orchestrator generates detailed reports showing:
+
+```
+Starting AI Orchestrator Mode for https://github.com/owner/repo
+Starting security analysis orchestration
+Session ID: a4ee9391-fe82-4edf-ba0e-922a7e38741c
+
+Phase 1: Initialize Code Analysis
+Phase 2: Analyze Codebase Structure
+  -> Detected language: JavaScript, files: 142, LOC: ~2500
+Phase 3: Map Entry Points and Data Flow
+  -> Mapped 12 input sources, 8 dangerous sinks, 3 security controls
+Phase 4: Decompose into Parallel Analyses
+  -> Created 5 specialized analysis tasks with 5 agents
+Phase 5: Execute Parallel Code Analysis
+  -> Starting agent: code-injection-analyser
+  -> Starting agent: code-xss-analyser
+  -> Starting agent: code-path-analyser
+  -> Starting agent: code-crypto-analyser
+  -> Starting agent: code-auth-analyser
+  -> Agent code-injection-analyser completed: 3 vulnerabilities found
+  -> Agent code-xss-analyser completed: 2 vulnerabilities found
+  -> All 5 agents completed successfully
+Phase 6: Synthesize and Validate Findings
+Phase 7: Generate Code Security Report
+  -> Report generated: sessions/{session-id}/security_report.md
+
+Found 5 vulnerabilities across 8 files
+```
+
+## MCP Integration
+
+### Basic MCP Usage
+
+Use Semgrep MCP server for enhanced AI integration:
+
+```bash
+# Setup MCP server
+./scripts/setup-mcp.sh
+
+# Start MCP server
+source mcp-env/bin/activate
+start-semgrep-mcp
+
+# Use MCP mode
+./build/codesucks-ai \
+  -use-mcp-semgrep \
+  -repo https://github.com/owner/repo
+```
+
+### Combined MCP and Orchestrator
+
+Maximum AI-powered analysis combining both features:
+
+```bash
+# Setup both systems
+./scripts/setup-mcp.sh
+source mcp-env/bin/activate
+start-semgrep-mcp
+
+# Run with both MCP and orchestrator
+./build/codesucks-ai \
+  -orchestrator-mode \
+  -use-mcp-semgrep \
+  -repo https://github.com/owner/repo
+```
+
+### MCP Fallback Behavior
+
+The tool gracefully handles MCP server unavailability:
+
+```bash
+# If MCP server is not running, automatically falls back to CLI
+./build/codesucks-ai -use-mcp-semgrep -repo https://github.com/owner/repo
+
+# Output shows:
+# "Warning: MCP server not available, falling back to CLI mode"
+# Then continues with standard Semgrep CLI execution
 ```
 
 ## AI-Powered Fixes

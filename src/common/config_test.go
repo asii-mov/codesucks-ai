@@ -148,7 +148,7 @@ func TestSetConfigDefaults(t *testing.T) {
 
 	assert.Equal(t, "token", config.GitHub.AuthMethod)
 	assert.Equal(t, 10, config.Performance.Threads)
-	assert.Equal(t, "./results", config.Performance.OutputDir)
+	assert.Equal(t, "./scans", config.Performance.OutputDir)
 	assert.False(t, config.Performance.Debug)
 }
 
@@ -319,5 +319,5 @@ func TestGenerateDefaultConfig(t *testing.T) {
 	assert.True(t, config.Scanning.TruffleHog.Enabled)
 	assert.Equal(t, DefaultModel, config.AIAutomation.Model)
 	assert.Equal(t, 10, config.Performance.Threads)
-	assert.Equal(t, "./results", config.Performance.OutputDir)
+	assert.Equal(t, "./scans", config.Performance.OutputDir)
 }

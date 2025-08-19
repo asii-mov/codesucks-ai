@@ -69,12 +69,24 @@ func setConfigDefaults(config *Config) {
 
 	// Performance defaults
 	config.Performance.Threads = 10
-	config.Performance.OutputDir = "./results"
+	config.Performance.OutputDir = "./scans"
 	config.Performance.Debug = false
 
 	// Agent validation defaults
 	config.AgentValidation.Enabled = true
 	config.AgentValidation.ConfidenceThreshold = 0.7
+
+	// Orchestrator defaults (missing defaults that were causing the bug!)
+	config.Orchestrator.Enabled = false
+	config.Orchestrator.SessionDir = "./sessions"
+	config.Orchestrator.AgentsDir = "./agents"
+	config.Orchestrator.Timeout = 3600
+	config.Orchestrator.MaxAgents = 8
+
+	// Matrix Build defaults
+	config.MatrixBuild.Enabled = true           // Default to enabled
+	config.MatrixBuild.AutoDetect = true        // Default to auto-detect
+	config.MatrixBuild.LanguageThreshold = 10.0 // Default 10% threshold
 }
 
 // validateConfig validates the configuration structure
@@ -203,11 +215,42 @@ func MergeConfigWithOptions(config *Config, options *Options) {
 	if options.Threads != 10 {
 		config.Performance.Threads = options.Threads
 	}
-	if options.OutDir != "" && options.OutDir != "./results" {
+	if options.OutDir != "" && options.OutDir != "./scans" {
 		config.Performance.OutputDir = options.OutDir
 	}
 	if options.Debug {
 		config.Performance.Debug = true
+	}
+
+	// Orchestrator mode (missing fields that were causing the bug!)
+	if options.OrchestratorMode {
+		config.Orchestrator.Enabled = true
+	}
+	if options.SessionDir != "" && options.SessionDir != "./sessions" {
+		config.Orchestrator.SessionDir = options.SessionDir
+	}
+	if options.AgentsDir != "" && options.AgentsDir != "./agents" {
+		config.Orchestrator.AgentsDir = options.AgentsDir
+	}
+
+	// Matrix Build options
+	if options.MatrixBuild {
+		config.MatrixBuild.Enabled = true
+	}
+	if options.DisableAutoDetect {
+		config.MatrixBuild.AutoDetect = false
+	}
+	if options.ForceLanguage != "" {
+		config.MatrixBuild.ForceLanguage = options.ForceLanguage
+	}
+	if options.ForceFramework != "" {
+		config.MatrixBuild.ForceFramework = options.ForceFramework
+	}
+	if options.AdditionalRulesets != "" {
+		config.MatrixBuild.AdditionalRulesets = options.AdditionalRulesets
+	}
+	if options.LanguageThreshold != 10.0 {
+		config.MatrixBuild.LanguageThreshold = options.LanguageThreshold
 	}
 }
 
@@ -241,6 +284,19 @@ func ConvertConfigToOptions(config *Config) *Options {
 		Threads: config.Performance.Threads,
 		OutDir:  config.Performance.OutputDir,
 		Debug:   config.Performance.Debug,
+
+		// Orchestrator mode (missing fields that were causing the bug!)
+		OrchestratorMode: config.Orchestrator.Enabled,
+		SessionDir:       config.Orchestrator.SessionDir,
+		AgentsDir:        config.Orchestrator.AgentsDir,
+
+		// Matrix Build options
+		MatrixBuild:        config.MatrixBuild.Enabled,
+		DisableAutoDetect:  !config.MatrixBuild.AutoDetect,
+		ForceLanguage:      config.MatrixBuild.ForceLanguage,
+		ForceFramework:     config.MatrixBuild.ForceFramework,
+		AdditionalRulesets: config.MatrixBuild.AdditionalRulesets,
+		LanguageThreshold:  config.MatrixBuild.LanguageThreshold,
 	}
 
 	// GitHub configuration

@@ -92,6 +92,117 @@ func (gc *GitHubClient) GetRepositoryInfo(owner, repo string) (*common.RepoInfo,
 	return repoInfo, nil
 }
 
+// GetLanguages retrieves language statistics for a repository
+func (gc *GitHubClient) GetLanguages(owner, repo string) (*common.LanguageStats, error) {
+	languages, _, err := gc.Client.Repositories.ListLanguages(gc.Ctx, owner, repo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repository languages: %v", err)
+	}
+
+	// Calculate total bytes
+	total := 0
+	for _, bytes := range languages {
+		total += bytes
+	}
+
+	return &common.LanguageStats{
+		Languages: languages,
+		Total:     total,
+	}, nil
+}
+
+// GetRepositoryFiles retrieves a list of files in the repository (without content)
+func (gc *GitHubClient) GetRepositoryFiles(owner, repo, branch string) ([]common.RepositoryFile, error) {
+	if branch == "" {
+		// Get default branch
+		repository, _, err := gc.Client.Repositories.Get(gc.Ctx, owner, repo)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get repository info: %v", err)
+		}
+		branch = repository.GetDefaultBranch()
+	}
+
+	var files []common.RepositoryFile
+	err := gc.listRepositoryFiles(owner, repo, branch, "", &files, 0, 100) // Limit depth to avoid too many API calls
+	if err != nil {
+		return nil, fmt.Errorf("failed to list repository files: %v", err)
+	}
+
+	return files, nil
+}
+
+// listRepositoryFiles recursively lists files in the repository (limited depth for performance)
+func (gc *GitHubClient) listRepositoryFiles(owner, repo, branch, path string, files *[]common.RepositoryFile, depth, maxDepth int) error {
+	if depth > maxDepth {
+		return nil // Stop recursion at max depth
+	}
+
+	// Get directory contents
+	_, directoryContent, _, err := gc.Client.Repositories.GetContents(
+		gc.Ctx, owner, repo, path,
+		&github.RepositoryContentGetOptions{Ref: branch},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to get directory contents for path '%s': %v", path, err)
+	}
+
+	for _, content := range directoryContent {
+		file := common.RepositoryFile{
+			Path: content.GetPath(),
+			Type: content.GetType(),
+			Size: content.GetSize(),
+		}
+
+		// For key files, get content for framework detection
+		if gc.isKeyFile(content.GetName()) && content.GetSize() < 10000 { // Only small files
+			fileContent, err := gc.GetFileContent(owner, repo, branch, content.GetPath())
+			if err == nil {
+				file.Content = fileContent
+			}
+		}
+
+		*files = append(*files, file)
+
+		// Recurse into directories (with depth limit)
+		if content.GetType() == "dir" {
+			err := gc.listRepositoryFiles(owner, repo, branch, content.GetPath(), files, depth+1, maxDepth)
+			if err != nil {
+				// Don't fail entire operation for one directory
+				continue
+			}
+		}
+	}
+
+	return nil
+}
+
+// isKeyFile determines if a file is important for framework detection
+func (gc *GitHubClient) isKeyFile(filename string) bool {
+	keyFiles := []string{
+		"package.json",
+		"requirements.txt",
+		"pom.xml",
+		"go.mod",
+		"Gemfile",
+		"composer.json",
+		"Cargo.toml",
+		"build.gradle",
+		"app.py",
+		"manage.py",
+		"artisan",
+		"next.config.js",
+		"webpack.config.js",
+		"tsconfig.json",
+	}
+
+	for _, key := range keyFiles {
+		if filename == key {
+			return true
+		}
+	}
+	return false
+}
+
 // TestAuthentication verifies that the GitHub client is properly authenticated
 func (gc *GitHubClient) TestAuthentication() error {
 	// Try to get user information to test authentication

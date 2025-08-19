@@ -607,6 +607,44 @@ const htmlTemplate = `
                 {{end}}
             </div>
             {{end}}
+
+            {{if .MatrixConfig}}
+            <div class="stat-card">
+                <h3>🎯 Matrix Configuration</h3>
+                <div class="stat-item">
+                    <span class="stat-label">Primary Language</span>
+                    <span class="stat-value">{{.MatrixConfig.Languages.Primary.Name}} ({{printf "%.1f" .MatrixConfig.Languages.Primary.Percentage}}%)</span>
+                </div>
+                {{if .MatrixConfig.Languages.Secondary.Name}}
+                <div class="stat-item">
+                    <span class="stat-label">Secondary Language</span>
+                    <span class="stat-value">{{.MatrixConfig.Languages.Secondary.Name}} ({{printf "%.1f" .MatrixConfig.Languages.Secondary.Percentage}}%)</span>
+                </div>
+                {{end}}
+                {{if ne .MatrixConfig.Frameworks.Primary "None"}}
+                <div class="stat-item">
+                    <span class="stat-label">Primary Framework</span>
+                    <span class="stat-value">{{.MatrixConfig.Frameworks.Primary}}</span>
+                </div>
+                {{end}}
+                {{if .MatrixConfig.Frameworks.Secondary}}
+                <div class="stat-item">
+                    <span class="stat-label">Secondary Frameworks</span>
+                    <span class="stat-value">{{len .MatrixConfig.Frameworks.Secondary}} detected</span>
+                </div>
+                {{end}}
+                <div class="stat-item">
+                    <span class="stat-label">Rulesets Applied</span>
+                    <span class="stat-value">{{len .MatrixConfig.Rulesets}}</span>
+                </div>
+                {{if .MatrixConfig.AutoDetected}}
+                <div class="stat-item">
+                    <span class="stat-label">Detection Method</span>
+                    <span class="stat-value">Auto-detected</span>
+                </div>
+                {{end}}
+            </div>
+            {{end}}
         </div>
 
         <div class="findings-section">

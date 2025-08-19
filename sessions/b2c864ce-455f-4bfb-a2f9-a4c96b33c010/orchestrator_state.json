@@ -1,0 +1,165 @@
+{
+  "session_id": "b2c864ce-455f-4bfb-a2f9-a4c96b33c010",
+  "created_at": "2025-08-17T21:39:09.687697849+01:00",
+  "current_phase": "PARALLEL_ANALYSIS",
+  "source_path": "sessions/b2c864ce-455f-4bfb-a2f9-a4c96b33c010/vulnerable_code/asii-mov-NodeGoat-AI-test",
+  "files_downloaded": 142,
+  "codebase_context": {
+    "primary_language": "HTML",
+    "frameworks": [],
+    "entry_points": [
+      "app.json",
+      "app/routes/index.js",
+      "artifacts/cert/server.crt",
+      "artifacts/cert/server.key",
+      "server.js",
+      "test/e2e/plugins/index.js",
+      "test/e2e/support/index.js"
+    ],
+    "total_files": 142,
+    "total_loc": 2500,
+    "security_relevant_files": [
+      "app/routes/session.js",
+      "app/views/login.html",
+      "artifacts/cert",
+      "artifacts/cert/server.crt",
+      "artifacts/cert/server.key",
+      "test/e2e/integration/login_spec.js",
+      "test/security",
+      "test/security/profile-test.js"
+    ]
+  },
+  "code_patterns": {
+    "input_sources": [],
+    "dangerous_sinks": [],
+    "security_controls": []
+  },
+  "decomposed_analyses": [
+    {
+      "analysis_id": "analysis_injection",
+      "focus": "SQL, NoSQL, LDAP, OS Command, Expression Language injection",
+      "target_patterns": [
+        "db.query",
+        "execute",
+        "system",
+        "eval"
+      ],
+      "file_scope": [],
+      "assigned_agent": "code-injection-analyser"
+    },
+    {
+      "analysis_id": "analysis_xss",
+      "focus": "Reflected, Stored, and DOM-based XSS",
+      "target_patterns": [
+        "innerHTML",
+        "document.write",
+        "template",
+        "render"
+      ],
+      "file_scope": [],
+      "assigned_agent": "code-xss-analyser"
+    },
+    {
+      "analysis_id": "analysis_path",
+      "focus": "Path traversal and file inclusion",
+      "target_patterns": [
+        "open",
+        "read",
+        "include",
+        "require"
+      ],
+      "file_scope": [],
+      "assigned_agent": "code-path-analyser"
+    },
+    {
+      "analysis_id": "analysis_crypto",
+      "focus": "Cryptographic implementation flaws",
+      "target_patterns": [
+        "md5",
+        "sha1",
+        "des",
+        "random",
+        "encrypt"
+      ],
+      "file_scope": [],
+      "assigned_agent": "code-crypto-analyser"
+    },
+    {
+      "analysis_id": "analysis_auth",
+      "focus": "Authentication and authorization flaws",
+      "target_patterns": [
+        "login",
+        "auth",
+        "session",
+        "token",
+        "password"
+      ],
+      "file_scope": [],
+      "assigned_agent": "code-auth-analyser"
+    }
+  ],
+  "analysis_agents": [
+    {
+      "agent_id": "agent_code-injection-analyser_1",
+      "agent_type": "code-injection-analyser",
+      "analysis_id": "analysis_injection",
+      "state_file": "sessions/b2c864ce-455f-4bfb-a2f9-a4c96b33c010/sub_agents/agent_code-injection-analyser_1_state.json",
+      "status": "pending",
+      "files": null,
+      "files_analyzed": 0,
+      "vulnerabilities_found": 0
+    },
+    {
+      "agent_id": "agent_code-xss-analyser_2",
+      "agent_type": "code-xss-analyser",
+      "analysis_id": "analysis_xss",
+      "state_file": "sessions/b2c864ce-455f-4bfb-a2f9-a4c96b33c010/sub_agents/agent_code-xss-analyser_2_state.json",
+      "status": "pending",
+      "files": null,
+      "files_analyzed": 0,
+      "vulnerabilities_found": 0
+    },
+    {
+      "agent_id": "agent_code-path-analyser_3",
+      "agent_type": "code-path-analyser",
+      "analysis_id": "analysis_path",
+      "state_file": "sessions/b2c864ce-455f-4bfb-a2f9-a4c96b33c010/sub_agents/agent_code-path-analyser_3_state.json",
+      "status": "pending",
+      "files": null,
+      "files_analyzed": 0,
+      "vulnerabilities_found": 0
+    },
+    {
+      "agent_id": "agent_code-crypto-analyser_4",
+      "agent_type": "code-crypto-analyser",
+      "analysis_id": "analysis_crypto",
+      "state_file": "sessions/b2c864ce-455f-4bfb-a2f9-a4c96b33c010/sub_agents/agent_code-crypto-analyser_4_state.json",
+      "status": "pending",
+      "files": null,
+      "files_analyzed": 0,
+      "vulnerabilities_found": 0
+    },
+    {
+      "agent_id": "agent_code-auth-analyser_5",
+      "agent_type": "code-auth-analyser",
+      "analysis_id": "analysis_auth",
+      "state_file": "sessions/b2c864ce-455f-4bfb-a2f9-a4c96b33c010/sub_agents/agent_code-auth-analyser_5_state.json",
+      "status": "pending",
+      "files": null,
+      "files_analyzed": 0,
+      "vulnerabilities_found": 0
+    }
+  ],
+  "vulnerabilities": [],
+  "vulnerability_patterns": [],
+  "code_metrics": {
+    "files_analyzed": 0,
+    "functions_analyzed": 0,
+    "total_vulnerabilities": 0,
+    "severity_distribution": {},
+    "vulnerability_density": 0,
+    "most_vulnerable_components": []
+  },
+  "final_report_path": null,
+  "completed_at": null
+}

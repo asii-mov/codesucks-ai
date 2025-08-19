@@ -1,0 +1,15 @@
+{
+  "agent_id": "agent_code-auth-analyser_3ede6d8a",
+  "agent_type": "code-auth-analyser",
+  "analysis_id": "analysis_auth",
+  "errors": null,
+  "files": [],
+  "files_processed": null,
+  "last_update": "2025-08-17T21:31:17.693706531+01:00",
+  "pid": 33252,
+  "progress": 0,
+  "results": [],
+  "start_time": "2025-08-17T21:31:17.689079469+01:00",
+  "started_at": "2025-08-17T21:31:17.693645376+01:00",
+  "status": "running"
+}

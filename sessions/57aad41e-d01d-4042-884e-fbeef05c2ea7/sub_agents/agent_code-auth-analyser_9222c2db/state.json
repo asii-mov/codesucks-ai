@@ -1,0 +1,14 @@
+{
+  "agent_id": "agent_code-auth-analyser_9222c2db",
+  "agent_type": "code-auth-analyser",
+  "analysis_id": "analysis_auth",
+  "completed_at": "2025-08-19T23:16:10.699326727+01:00",
+  "errors": null,
+  "files": [],
+  "files_processed": null,
+  "last_update": "2025-08-19T23:16:10.69947059+01:00",
+  "progress": 0,
+  "results": [],
+  "start_time": "2025-08-19T23:08:53.290528961+01:00",
+  "status": "completed"
+}

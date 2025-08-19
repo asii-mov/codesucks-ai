@@ -5,6 +5,8 @@ This guide helps you diagnose and resolve common issues with codesucks-ai.
 ## Table of Contents
 
 - [Installation Issues](#installation-issues)
+- [Orchestrator Mode Issues](#orchestrator-mode-issues)
+- [MCP Integration Issues](#mcp-integration-issues)
 - [Authentication Problems](#authentication-problems)
 - [Scanning Issues](#scanning-issues)
 - [Performance Problems](#performance-problems)
@@ -98,6 +100,162 @@ go: module github.com/asii-mov/codesucks-ai: cannot find module
 3. **Add to PATH**:
    ```bash
    export PATH=$PATH:/path/to/codesucks-ai
+   ```
+
+## Orchestrator Mode Issues
+
+### Claude CLI Not Found
+
+**Problem**: Orchestrator mode falls back to legacy mode
+```
+Warning: Claude CLI not found in PATH
+Falling back to legacy mode due to missing Claude CLI
+```
+
+**Solutions**:
+
+1. **Install Claude Code CLI**:
+   - Download from [Claude Code releases](https://docs.anthropic.com/en/docs/claude-code)
+   - Ensure `claude` command is available in PATH
+   - Test: `claude --version`
+
+2. **Check PATH Configuration**:
+   ```bash
+   which claude
+   echo $PATH
+   ```
+
+3. **Verify Installation**:
+   ```bash
+   claude --help
+   # Should show Claude Code CLI help
+   ```
+
+### Orchestrator Mode Not Triggering
+
+**Problem**: Orchestrator mode flag not working
+```
+Checking orchestrator mode - OrchestratorMode: false
+Entering legacy scanning mode
+```
+
+**Solutions**:
+
+1. **Recently Fixed**: Configuration merging bug that reset orchestrator mode
+2. **Verify Flag Usage**:
+   ```bash
+   ./build/codesucks-ai -orchestrator-mode -repo https://github.com/owner/repo
+   ```
+
+3. **Check for Config File Conflicts**:
+   ```bash
+   # Ensure config file doesn't override CLI flags
+   ./build/codesucks-ai -orchestrator-mode -repo https://github.com/owner/repo -config-file ""
+   ```
+
+### Agent Spawning Failures
+
+**Problem**: Agents fail to start
+```
+Failed to create orchestrator: failed to initialize Claude SDK client
+```
+
+**Solutions**:
+
+1. **Check ANTHROPIC_API_KEY**:
+   ```bash
+   echo $ANTHROPIC_API_KEY | head -c 20
+   # Should show: sk-ant-api03-...
+   ```
+
+2. **Verify Agents Directory**:
+   ```bash
+   ls -la agents/
+   # Should contain *.md agent configuration files
+   ```
+
+3. **Check Session Directory Permissions**:
+   ```bash
+   mkdir -p sessions
+   chmod 755 sessions
+   ```
+
+### Session Creation Failures
+
+**Problem**: Session directory errors
+```
+Failed to create session directory
+```
+
+**Solutions**:
+
+1. **Check Disk Space**:
+   ```bash
+   df -h .
+   ```
+
+2. **Verify Write Permissions**:
+   ```bash
+   touch sessions/test.tmp && rm sessions/test.tmp
+   ```
+
+3. **Manual Session Directory**:
+   ```bash
+   mkdir -p sessions
+   chmod 755 sessions
+   ```
+
+## MCP Integration Issues
+
+### MCP Server Won't Start
+
+**Problem**: Semgrep MCP server fails to start
+```
+error: externally-managed-environment
+```
+
+**Solutions**:
+
+1. **Use Virtual Environment with uv**:
+   ```bash
+   uv venv mcp-env
+   source mcp-env/bin/activate
+   uv pip install semgrep-mcp semgrep
+   ```
+
+2. **Start MCP Server**:
+   ```bash
+   source mcp-env/bin/activate
+   python -m semgrep_mcp.server
+   ```
+
+3. **Check Server Health**:
+   ```bash
+   curl http://localhost:3000/health
+   ```
+
+### MCP Version Compatibility
+
+**Problem**: FastMCP version errors
+```
+TypeError: FastMCP.__init__() got an unexpected keyword argument 'version'
+```
+
+**Solutions**:
+
+1. **Use Isolated Environment**:
+   ```bash
+   # Clean environment with uv
+   rm -rf mcp-env
+   uv venv mcp-env
+   source mcp-env/bin/activate
+   uv pip install semgrep-mcp
+   ```
+
+2. **Fallback to CLI Mode**:
+   ```bash
+   # Tool automatically falls back if MCP unavailable
+   ./build/codesucks-ai -repo https://github.com/owner/repo
    ```
 
 ## Authentication Problems

@@ -1,0 +1,15 @@
+{
+  "agent_id": "agent_code-xss-analyser_da902320",
+  "agent_type": "code-xss-analyser",
+  "analysis_id": "analysis_xss",
+  "errors": null,
+  "files": [],
+  "files_processed": null,
+  "last_update": "2025-08-17T21:28:55.174680892+01:00",
+  "pid": 32221,
+  "progress": 0,
+  "results": [],
+  "start_time": "2025-08-17T21:28:55.171664658+01:00",
+  "started_at": "2025-08-17T21:28:55.173844429+01:00",
+  "status": "running"
+}

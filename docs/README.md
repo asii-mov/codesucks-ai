@@ -11,9 +11,10 @@ codesucks-ai is a comprehensive security analysis tool that combines static code
 
 ## ✨ Features
 
-- 🔍 **Static Analysis**: Powered by Semgrep with configurable rulesets
+- 🔍 **Static Analysis**: Powered by Semgrep with configurable rulesets and MCP integration
+- 🤖 **AI Orchestrator**: 5 specialized Claude Code subagents for parallel security analysis
 - 🔐 **Secret Detection**: TruffleHog integration for comprehensive secret scanning
-- 🤖 **AI Auto-Fix**: Claude AI generates fixes for detected vulnerabilities  
+- 🧠 **AI Auto-Fix**: Claude AI generates fixes for detected vulnerabilities  
 - 🔄 **GitHub Integration**: Automatic PR creation with fixes
 - 📊 **Rich Reports**: Unified HTML reports with vulnerabilities and secrets
 - ⚡ **No Repository Cloning**: Uses GitHub API for direct file access
@@ -21,6 +22,7 @@ codesucks-ai is a comprehensive security analysis tool that combines static code
 - ✅ **Secret Verification**: Validates found secrets to confirm active threats
 - 📝 **Issue Creation**: Automatic GitHub issue generation
 - 🧵 **Concurrent Processing**: Multi-threaded scanning for performance
+- 🎯 **7-Phase Analysis**: Comprehensive workflow from initialization to reporting
 
 ## 🚀 Quick Start
 
@@ -28,7 +30,10 @@ codesucks-ai is a comprehensive security analysis tool that combines static code
 
 1. **Install Dependencies**:
    ```bash
-   # Install Semgrep
+   # Install Claude Code CLI (required for orchestrator mode)
+   # Download from https://docs.anthropic.com/en/docs/claude-code
+   
+   # Install Semgrep (for CLI fallback)
    python3 -m pip install --user semgrep
    
    # Install TruffleHog (choose one method)
@@ -40,25 +45,43 @@ codesucks-ai is a comprehensive security analysis tool that combines static code
    cd codesucks-ai
    ```
 
-2. **Build the Tool**:
+2. **Setup MCP (Optional)**:
    ```bash
-   go build -o codesucks-ai ./cmd/codesucks-ai
+   # Setup Semgrep MCP server for enhanced AI integration
+   ./scripts/setup-mcp.sh
+   ```
+
+3. **Build the Tool**:
+   ```bash
+   cd src && make build
+   # OR manually: go build -o ../build/codesucks-ai ./cmd/codesucks-ai
    ```
 
 ### Basic Usage
 
 ```bash
-# Quick scan with shell script
+# Basic scan (legacy mode)
+./build/codesucks-ai \
+  -github-token $GITHUB_TOKEN \
+  -anthropic-key $ANTHROPIC_API_KEY \
+  -repo https://github.com/owner/repo
+
+# AI Orchestrator Mode (5 specialized Claude Code subagents)
+./build/codesucks-ai \
+  -orchestrator-mode \
+  -repo https://github.com/owner/repo
+
+# Enhanced with MCP integration
+./build/codesucks-ai \
+  -orchestrator-mode \
+  -use-mcp-semgrep \
+  -repo https://github.com/owner/repo
+
+# Quick scan with shell script (legacy)
 ./run-codesucks-ai.sh \
   -g $GITHUB_TOKEN \
   -a $ANTHROPIC_API_KEY \
   -r https://github.com/owner/repo
-
-# Direct binary usage
-./codesucks-ai \
-  -github-token $GITHUB_TOKEN \
-  -anthropic-key $ANTHROPIC_API_KEY \
-  -repo https://github.com/owner/repo
 ```
 
 ### Configuration Presets

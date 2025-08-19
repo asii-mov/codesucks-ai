@@ -1,0 +1,195 @@
+# Enhanced Comprehensive Analysis Configuration - NO AUTO-FIX
+# Complete three-layer analysis: SAST + Secret Detection + Deep AI Analysis
+# This configuration enables the full orchestrator capabilities with 8 specialized agents
+# Auto-fix is DISABLED for analysis-only mode
+
+target:
+  repo: ""  # Will be set via CLI
+  repos_file: ""
+
+scanning:
+  semgrep:
+    enabled: true
+    path: "semgrep"
+    config: "comprehensive"
+    custom_flags: "--timeout 600 --max-memory 4096"
+  trufflehog:
+    enabled: true
+    path: "trufflehog"
+    verify_secrets: true
+
+ai_automation:
+  enabled: true
+  model: "claude-3-5-sonnet-20241022"
+  min_confidence: 0.8
+  auto_fix: false  # DISABLED - Analysis only
+  create_pr: false
+  create_issue: false
+
+github:
+  auth_method: "token"  # or "app"
+  app_id: 0
+  app_key_file: ""
+
+performance:
+  threads: 8
+  output_dir: "./results"
+  debug: false
+
+agent_validation:
+  enabled: true
+  confidence_threshold: 0.7
+
+# Orchestrator Configuration - FULL 8-AGENT ANALYSIS
+orchestrator:
+  enabled: true
+  session_dir: "./sessions"
+  agents_dir: "./agents"
+  timeout: 3600  # 1 hour timeout for complete analysis
+  max_agents: 8  # Maximum parallel agents
+
+# Individual Agent Settings - ALL ENABLED
+agent_settings:
+  injection_analyser:
+    enabled: true
+    model: "claude-3-5-sonnet-20241022"
+    max_tokens: 4096
+    timeout: 600  # 10 minutes per agent
+    file_patterns:
+      - "*.py"
+      - "*.js"
+      - "*.java" 
+      - "*.go"
+      - "*.php"
+      - "*.sql"
+    exclude_patterns:
+      - "*/test/*"
+      - "*/tests/*"
+      - "*_test.py"
+      - "*_spec.js"
+    confidence_threshold: 0.85
+
+  xss_analyser:
+    enabled: true
+    model: "claude-3-5-sonnet-20241022"
+    max_tokens: 4096
+    timeout: 600
+    file_patterns:
+      - "*.html"
+      - "*.js"
+      - "*.jsx"
+      - "*.ts"
+      - "*.tsx"
+      - "*.vue"
+      - "*.py"
+      - "*.php"
+      - "*.jsp"
+    exclude_patterns:
+      - "*/node_modules/*"
+      - "*/vendor/*"
+      - "*/dist/*"
+      - "*/build/*"
+    confidence_threshold: 0.80
+
+  path_analyser:
+    enabled: true
+    model: "claude-3-5-sonnet-20241022"
+    max_tokens: 4096
+    timeout: 600
+    file_patterns:
+      - "*.py"
+      - "*.js"
+      - "*.php"
+      - "*.java"
+      - "*.go"
+      - "*.c"
+      - "*.cpp"
+    exclude_patterns:
+      - "*/test/*"
+      - "*/tests/*"
+    confidence_threshold: 0.85
+
+  crypto_analyser:
+    enabled: true
+    model: "claude-3-5-sonnet-20241022"
+    max_tokens: 4096
+    timeout: 600
+    file_patterns:
+      - "*.py"
+      - "*.js"
+      - "*.java"
+      - "*.go"
+      - "*.c"
+      - "*.cpp"
+      - "*.cs"
+    exclude_patterns:
+      - "*/test/*"
+      - "*/tests/*"
+    confidence_threshold: 0.90
+
+  auth_analyser:
+    enabled: true
+    model: "claude-3-5-sonnet-20241022"
+    max_tokens: 4096
+    timeout: 600
+    file_patterns:
+      - "*.py"
+      - "*.js"
+      - "*.java"
+      - "*.go"
+      - "*.php"
+      - "*.rb"
+    exclude_patterns:
+      - "*/test/*"
+      - "*/tests/*"
+    confidence_threshold: 0.85
+
+  deserial_analyser:
+    enabled: true
+    model: "claude-3-5-sonnet-20241022"
+    max_tokens: 4096
+    timeout: 600
+    file_patterns:
+      - "*.py"
+      - "*.java"
+      - "*.php"
+      - "*.cs"
+      - "*.rb"
+    exclude_patterns:
+      - "*/test/*"
+      - "*/tests/*"
+    confidence_threshold: 0.95
+
+  xxe_analyser:
+    enabled: true
+    model: "claude-3-5-sonnet-20241022"
+    max_tokens: 4096
+    timeout: 600
+    file_patterns:
+      - "*.java"
+      - "*.cs"
+      - "*.php"
+      - "*.py"
+      - "*.js"
+      - "*.xml"
+    exclude_patterns:
+      - "*/test/*"
+      - "*/tests/*"
+    confidence_threshold: 0.90
+
+  race_analyser:
+    enabled: true
+    model: "claude-3-5-sonnet-20241022"
+    max_tokens: 4096
+    timeout: 600
+    file_patterns:
+      - "*.c"
+      - "*.cpp"
+      - "*.java"
+      - "*.go"
+      - "*.py"
+      - "*.js"
+    exclude_patterns:
+      - "*/test/*"
+      - "*/tests/*"
+    confidence_threshold: 0.80

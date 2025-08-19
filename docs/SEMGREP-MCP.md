@@ -43,11 +43,16 @@ This will:
 - Set up start/stop scripts
 - Configure systemd service (optional)
 
-### Manual Installation
+### Manual Installation (With Virtual Environment)
+
+Due to externally-managed-environment restrictions, use a virtual environment:
 
 1. **Install Semgrep MCP Server**
    ```bash
-   pip3 install --user semgrep-mcp
+   # Create virtual environment with uv (recommended)
+   uv venv mcp-env
+   source mcp-env/bin/activate
+   uv pip install semgrep-mcp semgrep
    ```
 
 2. **Install Semgrep** (if not already installed)

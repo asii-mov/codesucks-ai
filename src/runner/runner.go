@@ -3,6 +3,7 @@ package runner
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strings"
 	"sync"
@@ -13,6 +14,7 @@ import (
 	"github.com/asii-mov/codesucks-ai/common/ai"
 	"github.com/asii-mov/codesucks-ai/common/codesucksai"
 	"github.com/asii-mov/codesucks-ai/common/github"
+	"github.com/asii-mov/codesucks-ai/common/matrix"
 	"github.com/asii-mov/codesucks-ai/common/orchestrator"
 	"github.com/asii-mov/codesucks-ai/common/report"
 )
@@ -31,6 +33,14 @@ func scanTarget(target string, options *common.Options) (*common.ScanResult, err
 // scanWithOrchestrator performs security analysis using the AI orchestrator
 func scanWithOrchestrator(target string, options *common.Options) (*common.ScanResult, error) {
 	fmt.Printf("🤖 Starting AI Orchestrator Mode for %s\n", target)
+
+	// Check Claude CLI availability for subagents
+	if _, err := exec.LookPath("claude"); err != nil {
+		fmt.Printf("⚠️  Warning: Claude CLI not found in PATH: %v\n", err)
+		fmt.Printf("💡 Tip: Claude Code subagents require 'claude' command to be available\n")
+		fmt.Printf("🔄 Falling back to legacy mode due to missing Claude CLI\n")
+		return scanWithLegacyMode(target, options)
+	}
 
 	// Create orchestrator instance
 	orch, err := orchestrator.NewSecurityOrchestrator(options.SessionDir, options.AgentsDir, options)
@@ -119,6 +129,27 @@ func scanWithLegacyMode(target string, options *common.Options) (*common.ScanRes
 		return result, fmt.Errorf("source path is not a directory: %s", sourcePath)
 	}
 
+	// Matrix Build: Auto-detect languages and frameworks to optimize scanning
+	var matrixConfig *common.MatrixConfig
+	if options.MatrixBuild && !options.DisableAutoDetect {
+		matrixConfig, err = buildMatrixConfiguration(githubClient, owner, repo, options)
+		if err != nil {
+			fmt.Printf("⚠️  Warning: Matrix build failed: %v\n", err)
+			fmt.Printf("🔄 Continuing with default configuration\n")
+		} else {
+			// Update ConfigPath to use matrix-generated rulesets
+			options.ConfigPath = buildMatrixRulesetConfig(matrixConfig, options)
+			fmt.Printf("🎯 Matrix Build: Detected %s", matrixConfig.Languages.Primary.Name)
+			if matrixConfig.Frameworks.Primary != "None" {
+				fmt.Printf(" + %s", matrixConfig.Frameworks.Primary)
+			}
+			fmt.Printf(" (%.1f%% confidence)\n", matrixConfig.Languages.Primary.Percentage)
+
+			// Store matrix config in scan result
+			result.MatrixConfig = matrixConfig
+		}
+	}
+
 	// Run Semgrep analysis if not disabled
 	var semgrepJson *common.SemgrepJson
 	if !options.NoSemgrep {
@@ -188,7 +219,7 @@ func scanWithLegacyMode(target string, options *common.Options) (*common.ScanRes
 	// Generate HTML report combining Semgrep and TruffleHog results
 	var reportData *common.ReportData
 	if !options.NoSemgrep {
-		reportData = report.ConvertValidatedResultsToReport(target, filteredResults)
+		reportData = report.ConvertValidatedResultsToReport(target, filteredResults, matrixConfig)
 	} else {
 		// Create empty report data if only TruffleHog is running
 		reportData = &common.ReportData{
@@ -198,6 +229,7 @@ func scanWithLegacyMode(target string, options *common.Options) (*common.ScanRes
 			SeverityStats:              make(map[string]int),
 			SeverityStatsOrdering:      []string{"CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"},
 			Findings:                   []common.SemgrepFinding{},
+			MatrixConfig:               matrixConfig,
 		}
 	}
 
@@ -576,4 +608,83 @@ func extractOriginalResults(validatedResults []common.ValidatedResult) []common.
 		results = append(results, vr.Result)
 	}
 	return results
+}
+
+// buildMatrixConfiguration creates a matrix configuration by detecting languages and frameworks
+func buildMatrixConfiguration(githubClient *github.GitHubClient, owner, repo string, options *common.Options) (*common.MatrixConfig, error) {
+	builder := matrix.NewMatrixBuilder()
+
+	// Try to get language statistics from GitHub API
+	languageStats, err := githubClient.GetLanguages(owner, repo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get language statistics: %v", err)
+	}
+
+	// Get repository files for framework detection
+	files, err := githubClient.GetRepositoryFiles(owner, repo, "")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repository files: %v", err)
+	}
+
+	// Apply language override if specified
+	if options.ForceLanguage != "" {
+		// Override primary language
+		if languageStats.Languages == nil {
+			languageStats.Languages = make(map[string]int)
+		}
+		// Clear existing languages and set forced language as 100%
+		languageStats.Languages = map[string]int{options.ForceLanguage: 100000}
+		languageStats.Total = 100000
+	}
+
+	// Build matrix configuration using hybrid approach (GitHub API + file analysis)
+	matrixConfig := builder.BuildHybrid(*languageStats, files, options.LanguageThreshold)
+
+	// Apply framework override if specified
+	if options.ForceFramework != "" {
+		matrixConfig.Frameworks.Primary = options.ForceFramework
+		matrixConfig.Frameworks.Secondary = []string{} // Clear secondary when forcing
+
+		// Rebuild rulesets with forced framework
+		detection := common.DetectionResult{
+			Languages:  matrixConfig.Languages,
+			Frameworks: matrixConfig.Frameworks,
+			Confidence: 0.5, // Lower confidence for forced configuration
+			Source:     "user-override",
+		}
+		matrixConfig = builder.BuildMatrixConfig(detection)
+	}
+
+	// Add additional rulesets if specified
+	if options.AdditionalRulesets != "" {
+		additionalRules := strings.Split(options.AdditionalRulesets, ",")
+		for i, rule := range additionalRules {
+			additionalRules[i] = strings.TrimSpace(rule)
+		}
+		matrixConfig.Rulesets = append(matrixConfig.Rulesets, additionalRules...)
+	}
+
+	return &matrixConfig, nil
+}
+
+// buildMatrixRulesetConfig converts matrix rulesets to Semgrep configuration format
+func buildMatrixRulesetConfig(matrixConfig *common.MatrixConfig, options *common.Options) string {
+	if len(matrixConfig.Rulesets) == 0 {
+		// Fallback to original config if no rulesets detected
+		return options.ConfigPath
+	}
+
+	// Create a temporary config string with all detected rulesets
+	var configParts []string
+	for _, ruleset := range matrixConfig.Rulesets {
+		configParts = append(configParts, "--config")
+		configParts = append(configParts, ruleset)
+	}
+
+	// Add additional flags
+	configParts = append(configParts, "--timeout", "300")
+	configParts = append(configParts, "--max-target-bytes", "1000000")
+
+	// Return as a single string (this will be parsed by buildSemgrepArgs)
+	return "matrix:" + strings.Join(configParts, " ")
 }

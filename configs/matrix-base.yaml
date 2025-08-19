@@ -1,0 +1,84 @@
+# Base Matrix Configuration Template
+# This template is used as a foundation for auto-generated matrix configs
+
+target:
+  # Repository URL will be set dynamically
+
+scanning:
+  semgrep:
+    enabled: true
+    config: "matrix"
+    # custom_flags will be set based on detected languages/frameworks
+  trufflehog:
+    enabled: true
+    verify_secrets: true
+
+ai_automation:
+  enabled: true
+  model: "claude-3-5-sonnet-20241022"
+  min_confidence: 0.80
+  auto_fix: false
+  create_pr: false
+  create_issue: false
+
+github:
+  auth_method: "token"
+
+performance:
+  threads: 10
+  output_dir: "./results"
+  debug: false
+
+agent_validation:
+  enabled: true
+  confidence_threshold: 0.75
+
+# Orchestrator configuration for AI-powered analysis
+orchestrator:
+  enabled: false
+  session_dir: "./sessions"
+  agents_dir: "./agents"
+  timeout: 3600
+  max_agents: 5
+
+# Matrix build configuration
+matrix:
+  # Auto-detection settings
+  language_threshold: 10.0  # Minimum percentage to consider a language significant
+  confidence_threshold: 0.7  # Minimum confidence for auto-detection
+  
+  # Available rulesets by category
+  available_rulesets:
+    languages:
+      javascript: ["p/javascript", "p/nodejs"]
+      typescript: ["p/typescript", "p/javascript"]
+      python: ["p/python"]
+      java: ["p/java"]
+      go: ["p/go"]
+      ruby: ["p/ruby"]
+      php: ["p/php"]
+      csharp: ["p/csharp"]
+      cpp: ["p/cpp"]
+      c: ["p/c"]
+    
+    frameworks:
+      react: ["p/react"]
+      vue: ["p/vue"]
+      angular: ["p/angular"]
+      nextjs: ["p/react", "p/nextjs"]
+      express: ["p/express"]
+      django: ["p/django"]
+      flask: ["p/flask"]
+      fastapi: ["p/fastapi"]
+      rails: ["p/rails"]
+      laravel: ["p/laravel"]
+      spring: ["p/spring"]
+      gin: ["p/gin"]
+      echo: ["p/echo"]
+    
+    security:
+      web: ["p/owasp-top-ten", "p/xss"]
+      api: ["p/jwt", "p/owasp-top-ten"]
+      general: ["p/secrets", "p/security-audit"]
+      supply_chain: ["p/supply-chain"]
+      cwe: ["p/cwe-top-25"]

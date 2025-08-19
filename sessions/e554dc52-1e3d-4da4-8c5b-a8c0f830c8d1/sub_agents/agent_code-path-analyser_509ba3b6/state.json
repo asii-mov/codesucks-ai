@@ -1,0 +1,15 @@
+{
+  "agent_id": "agent_code-path-analyser_509ba3b6",
+  "agent_type": "code-path-analyser",
+  "analysis_id": "analysis_path",
+  "errors": null,
+  "files": [],
+  "files_processed": null,
+  "last_update": "2025-08-17T21:35:45.28488574+01:00",
+  "pid": 35357,
+  "progress": 0,
+  "results": [],
+  "start_time": "2025-08-17T21:35:45.282151852+01:00",
+  "started_at": "2025-08-17T21:35:45.284811804+01:00",
+  "status": "running"
+}

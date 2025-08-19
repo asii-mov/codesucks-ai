@@ -105,8 +105,15 @@ private-key.pem
 docs/_build/
 site/
 
-# Test results
+# Test results and artifacts
 test-results/
+test-results*/
+matrix-test/
+matrix-test*/
+matrix-final/
+matrix-final*/
+debug-test/
+archon-test/
 coverage/
 *.xml
 *.html.bak
@@ -114,3 +121,7 @@ coverage/
 coverage.html
 coverage.txt
 benchmark-results/
+
+# Temporary cloned repositories
+temp-*/
+*-temp/

@@ -119,24 +119,33 @@ func buildSemgrepArgsForStdout(sourcePath, configPath string) []string {
 		configPath = "configs/comprehensive.conf"
 	}
 
-	// Check if configPath is a preset name
-	if !strings.HasSuffix(configPath, ".conf") && !strings.Contains(configPath, "/") {
-		configPath = fmt.Sprintf("configs/%s.conf", configPath)
-	}
-
-	// Try to read configuration file
-	if configArgs := readConfigFile(configPath); len(configArgs) > 0 {
-		args = append(args, configArgs...)
+	// Handle matrix configuration (special format)
+	if strings.HasPrefix(configPath, "matrix:") {
+		// Parse matrix configuration format: "matrix:--config p/javascript --config p/react ..."
+		matrixConfig := strings.TrimPrefix(configPath, "matrix:")
+		matrixArgs := strings.Fields(matrixConfig)
+		args = append(args, matrixArgs...)
+		args = append(args, "--no-git-ignore") // Always add this for consistency
 	} else {
-		// Fallback to default configuration
-		args = append(args,
-			"--config", "p/trailofbits",
-			"--config", "p/security-audit",
-			"--config", "p/secrets",
-			"--no-git-ignore",
-			"--timeout", "300",
-			"--max-target-bytes", "1000000",
-		)
+		// Check if configPath is a preset name
+		if !strings.HasSuffix(configPath, ".conf") && !strings.Contains(configPath, "/") {
+			configPath = fmt.Sprintf("configs/%s.conf", configPath)
+		}
+
+		// Try to read configuration file
+		if configArgs := readConfigFile(configPath); len(configArgs) > 0 {
+			args = append(args, configArgs...)
+		} else {
+			// Fallback to default configuration
+			args = append(args,
+				"--config", "p/trailofbits",
+				"--config", "p/security-audit",
+				"--config", "p/secrets",
+				"--no-git-ignore",
+				"--timeout", "300",
+				"--max-target-bytes", "1000000",
+			)
+		}
 	}
 
 	// Add target path - use "." since we set cmd.Dir to sourcePath

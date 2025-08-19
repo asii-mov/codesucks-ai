@@ -1,0 +1,15 @@
+{
+  "agent_id": "agent_code-injection-analyser_a68a5736",
+  "agent_type": "code-injection-analyser",
+  "analysis_id": "analysis_injection",
+  "errors": null,
+  "files": [],
+  "files_processed": null,
+  "last_update": "2025-08-17T20:47:29.568410342+01:00",
+  "pid": 25478,
+  "progress": 0,
+  "results": [],
+  "start_time": "2025-08-17T20:47:29.567378104+01:00",
+  "started_at": "2025-08-17T20:47:29.568306892+01:00",
+  "status": "running"
+}

@@ -1,0 +1,14 @@
+{
+  "agent_id": "agent_code-injection-analyser_d5f20913",
+  "agent_type": "code-injection-analyser",
+  "analysis_id": "analysis_injection",
+  "completed_at": "2025-08-19T22:53:32.035862389+01:00",
+  "errors": null,
+  "files": [],
+  "files_processed": null,
+  "last_update": "2025-08-19T22:53:32.035939458+01:00",
+  "progress": 0,
+  "results": [],
+  "start_time": "2025-08-19T22:48:44.680713554+01:00",
+  "status": "completed"
+}

@@ -1,0 +1,14 @@
+{
+  "agent_id": "agent_code-path-analyser_2fc44887",
+  "agent_type": "code-path-analyser",
+  "analysis_id": "analysis_path",
+  "completed_at": "2025-08-17T22:01:05.873874076+01:00",
+  "errors": null,
+  "files": [],
+  "files_processed": null,
+  "last_update": "2025-08-17T22:01:05.8743821+01:00",
+  "progress": 0,
+  "results": [],
+  "start_time": "2025-08-17T21:55:51.479146392+01:00",
+  "status": "completed"
+}

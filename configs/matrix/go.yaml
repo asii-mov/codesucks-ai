@@ -1,0 +1,48 @@
+# Matrix Configuration: Go
+# Auto-generated configuration for Go applications
+
+target:
+  # Will be set dynamically by the runner
+
+scanning:
+  semgrep:
+    enabled: true
+    config: "matrix" 
+    custom_flags: "--config p/go --config p/secrets --config p/security-audit --config p/cwe-top-25 --timeout 300"
+  trufflehog:
+    enabled: true
+    verify_secrets: true
+
+ai_automation:
+  enabled: true
+  model: "claude-3-5-sonnet-20241022"
+  min_confidence: 0.80
+  auto_fix: false
+  create_pr: false
+  create_issue: false
+
+performance:
+  threads: 10
+  output_dir: "./results"
+  debug: false
+
+agent_validation:
+  enabled: true
+  confidence_threshold: 0.75
+
+# Matrix build metadata
+matrix:
+  primary_language: "Go"
+  primary_framework: "None"
+  detected_languages:
+    - name: "Go"
+      percentage: 100.0
+  detected_frameworks:
+    primary: "None"
+    secondary: []
+  rulesets:
+    base: ["p/go"]
+    framework: []
+    security: ["p/secrets", "p/security-audit", "p/cwe-top-25"]
+  confidence: 0.75
+  detection_source: "file-analysis"

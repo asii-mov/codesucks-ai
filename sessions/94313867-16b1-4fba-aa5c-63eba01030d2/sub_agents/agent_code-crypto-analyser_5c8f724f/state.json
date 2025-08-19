@@ -1,0 +1,15 @@
+{
+  "agent_id": "agent_code-crypto-analyser_5c8f724f",
+  "agent_type": "code-crypto-analyser",
+  "analysis_id": "analysis_crypto",
+  "errors": null,
+  "files": [],
+  "files_processed": null,
+  "last_update": "2025-08-17T20:47:29.568349967+01:00",
+  "pid": 25479,
+  "progress": 0,
+  "results": [],
+  "start_time": "2025-08-17T20:47:29.567473613+01:00",
+  "started_at": "2025-08-17T20:47:29.568247117+01:00",
+  "status": "running"
+}

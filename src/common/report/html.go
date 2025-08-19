@@ -106,7 +106,7 @@ func ConvertSemgrepToReport(target string, semgrepJson *common.SemgrepJson) *com
 }
 
 // ConvertValidatedResultsToReport converts validated results to report format
-func ConvertValidatedResultsToReport(target string, validatedResults []common.ValidatedResult) *common.ReportData {
+func ConvertValidatedResultsToReport(target string, validatedResults []common.ValidatedResult, matrixConfig *common.MatrixConfig) *common.ReportData {
 	var findings []common.SemgrepFinding
 
 	// Convert validated results to report findings
@@ -146,6 +146,7 @@ func ConvertValidatedResultsToReport(target string, validatedResults []common.Va
 		SeverityStats:              severityStats,
 		SeverityStatsOrdering:      []string{"CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"},
 		Findings:                   findings,
+		MatrixConfig:               matrixConfig,
 	}
 }
 

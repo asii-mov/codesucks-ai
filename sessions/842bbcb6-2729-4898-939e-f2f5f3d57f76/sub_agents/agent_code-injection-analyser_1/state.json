@@ -1,0 +1,13 @@
+{
+  "agent_id": "agent_code-injection-analyser_1",
+  "agent_type": "code-injection-analyser",
+  "analysis_id": "analysis_injection",
+  "status": "pending",
+  "files": [],
+  "files_processed": null,
+  "start_time": "2025-08-19T23:24:06.23913547+01:00",
+  "last_update": "0001-01-01T00:00:00Z",
+  "progress": 0,
+  "results": [],
+  "errors": null
+}

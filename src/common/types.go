@@ -56,6 +56,14 @@ type Options struct {
 	EnableCustomRules bool
 	TargetPath        string
 	MinSeverity       string
+
+	// Matrix Build Options
+	MatrixBuild        bool
+	ForceLanguage      string
+	ForceFramework     string
+	AdditionalRulesets string
+	LanguageThreshold  float64
+	DisableAutoDetect  bool
 }
 
 // Configuration sub-structures
@@ -117,6 +125,15 @@ type OrchestratorConfig struct {
 	MaxAgents  int    `yaml:"max_agents,omitempty"`
 }
 
+type MatrixBuildConfig struct {
+	Enabled            bool    `yaml:"enabled"`
+	AutoDetect         bool    `yaml:"auto_detect"`
+	ForceLanguage      string  `yaml:"force_language,omitempty"`
+	ForceFramework     string  `yaml:"force_framework,omitempty"`
+	AdditionalRulesets string  `yaml:"additional_rulesets,omitempty"`
+	LanguageThreshold  float64 `yaml:"language_threshold,omitempty"`
+}
+
 // YAML Configuration structure
 type Config struct {
 	Target          TargetConfig          `yaml:"target"`
@@ -126,6 +143,7 @@ type Config struct {
 	Performance     PerformanceConfig     `yaml:"performance"`
 	AgentValidation AgentValidationConfig `yaml:"agent_validation"`
 	Orchestrator    OrchestratorConfig    `yaml:"orchestrator"`
+	MatrixBuild     MatrixBuildConfig     `yaml:"matrix_build"`
 
 	AgentSettings struct {
 		InjectionAnalyser AgentConfig `yaml:"injection_analyser,omitempty"`
@@ -244,6 +262,7 @@ type AgentValidation struct {
 }
 
 type RepositoryContext struct {
+	SourcePath            string                 `json:"source_path"` // Path to downloaded source code
 	ProjectStructure      ProjectStructure       `json:"project_structure"`
 	TechnologyStack       TechnologyStack        `json:"technology_stack"`
 	SecurityPatterns      []SecurityPattern      `json:"security_patterns"`
@@ -347,6 +366,7 @@ type ReportData struct {
 	SecretStatsOrdering        []string
 	Findings                   []SemgrepFinding
 	SecretFindings             []TruffleHogFinding
+	MatrixConfig               *MatrixConfig `json:"matrix_config,omitempty"`
 }
 
 type SemgrepFinding struct {
@@ -389,6 +409,7 @@ type ScanResult struct {
 	ReportPath       string
 	FixesApplied     int
 	SecretsFound     int
+	MatrixConfig     *MatrixConfig `json:"matrix_config,omitempty"`
 	Error            error
 }
 
@@ -397,6 +418,8 @@ type OrchestratorState struct {
 	SessionID             string                  `json:"session_id"`
 	CreatedAt             time.Time               `json:"created_at"`
 	CurrentPhase          string                  `json:"current_phase"`
+	SourcePath            string                  `json:"source_path"`      // Path to downloaded source code
+	FilesDownloaded       int                     `json:"files_downloaded"` // Number of files fetched
 	CodebaseContext       CodebaseContext         `json:"codebase_context"`
 	CodePatterns          CodePatterns            `json:"code_patterns"`
 	DecomposedAnalyses    []DecomposedAnalysis    `json:"decomposed_analyses"`
@@ -449,13 +472,14 @@ type DecomposedAnalysis struct {
 }
 
 type AnalysisAgent struct {
-	AgentID              string `json:"agent_id"`
-	AgentType            string `json:"agent_type"`
-	AnalysisID           string `json:"analysis_id"`
-	StateFile            string `json:"state_file"`
-	Status               string `json:"status"`
-	FilesAnalyzed        int    `json:"files_analyzed"`
-	VulnerabilitiesFound int    `json:"vulnerabilities_found"`
+	AgentID              string   `json:"agent_id"`
+	AgentType            string   `json:"agent_type"`
+	AnalysisID           string   `json:"analysis_id"`
+	StateFile            string   `json:"state_file"`
+	Status               string   `json:"status"`
+	Files                []string `json:"files"` // Files assigned to this agent
+	FilesAnalyzed        int      `json:"files_analyzed"`
+	VulnerabilitiesFound int      `json:"vulnerabilities_found"`
 }
 
 type EnhancedVulnerability struct {
@@ -564,6 +588,52 @@ type AgentMetrics struct {
 	LinesAnalyzed        int           `json:"lines_analyzed"`
 	VulnerabilitiesFound int           `json:"vulnerabilities_found"`
 	FalsePositives       int           `json:"false_positives"`
+}
+
+// Matrix Build Types
+type LanguageStats struct {
+	Languages map[string]int `json:"languages"` // language -> bytes
+	Total     int            `json:"total"`
+}
+
+type LanguagePercentages struct {
+	Primary   LanguageInfo   `json:"primary"`
+	Secondary LanguageInfo   `json:"secondary,omitempty"`
+	All       []LanguageInfo `json:"all"`
+	Threshold float64        `json:"threshold"`
+}
+
+type LanguageInfo struct {
+	Name       string  `json:"name"`
+	Bytes      int     `json:"bytes"`
+	Percentage float64 `json:"percentage"`
+}
+
+type FrameworkDetection struct {
+	Primary    string            `json:"primary"`
+	Secondary  []string          `json:"secondary"`
+	BuildTools []string          `json:"build_tools"`
+	WebServer  string            `json:"web_server,omitempty"`
+	Database   []string          `json:"database,omitempty"`
+	Security   []string          `json:"security,omitempty"`
+	Indicators map[string]string `json:"indicators"` // file -> framework
+}
+
+type MatrixConfig struct {
+	Languages     LanguagePercentages `json:"languages"`
+	Frameworks    FrameworkDetection  `json:"frameworks"`
+	Rulesets      []string            `json:"rulesets"`
+	BaseRulesets  []string            `json:"base_rulesets"`
+	SecurityRules []string            `json:"security_rules"`
+	ConfigPath    string              `json:"config_path,omitempty"`
+	AutoDetected  bool                `json:"auto_detected"`
+}
+
+type DetectionResult struct {
+	Languages  LanguagePercentages `json:"languages"`
+	Frameworks FrameworkDetection  `json:"frameworks"`
+	Confidence float64             `json:"confidence"`
+	Source     string              `json:"source"` // "github-api", "file-analysis", "mixed"
 }
 
 // Constants
