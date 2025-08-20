@@ -38,6 +38,11 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Build the application
 cd src && make build && cd ..
+
+# Setup Python virtual environment for Semgrep and MCP
+uv venv mcp-env
+source mcp-env/bin/activate
+uv pip install semgrep semgrep-mcp
 ```
 
 ### Optional: TruffleHog Installation
@@ -71,47 +76,25 @@ EOF
 
 ### Usage
 
-**Simple One-Command Approach:**
+**Basic Usage:**
 
 ```bash
-# Basic orchestrator scan (handles all setup automatically)
-./run-orchestrator.sh -r https://github.com/owner/repo
-
-# With MCP integration (auto-setup with uv venv)
-./run-orchestrator.sh -r https://github.com/owner/repo --mcp
-
-# Setup environment only (useful for first-time setup)
-./run-orchestrator.sh --setup-only
-
-# With custom configuration
-./run-orchestrator.sh -r https://github.com/owner/repo -c configs/orchestrator.yaml
-```
-
-**Manual Approach (if needed):**
-
-```bash
-# Basic scan with comprehensive analysis (default)
-./build/codesucks-ai -repo https://github.com/owner/repo
+# Basic scan with comprehensive analysis (recommended)
+./run-codesucks.sh -repo https://github.com/owner/repo
 
 # Quick scan with minimal rules
-./build/codesucks-ai -repo https://github.com/owner/repo -config basic
-
-# AI Orchestrator Mode (5 specialized Claude Code subagents)
-./build/codesucks-ai -repo https://github.com/owner/repo -orchestrator-mode
+./run-codesucks.sh -repo https://github.com/owner/repo -config basic
 
 # Matrix Build Mode (intelligent language/framework detection)
-./build/codesucks-ai -repo https://github.com/owner/repo -matrix-build
+./run-codesucks.sh -repo https://github.com/owner/repo -matrix-build
 
 # Matrix Build with custom language override
-./build/codesucks-ai -repo https://github.com/owner/repo -matrix-build --force-language python
+./run-codesucks.sh -repo https://github.com/owner/repo -matrix-build --force-language python
 
-
-# Manual MCP setup and usage
-uv venv mcp-env
+# With MCP integration for enhanced AI analysis
 source mcp-env/bin/activate
-uv pip install semgrep-mcp semgrep
 python -m semgrep_mcp.server &
-./build/codesucks-ai -repo https://github.com/owner/repo -orchestrator-mode -use-mcp-semgrep
+./run-codesucks.sh -repo https://github.com/owner/repo -use-mcp-semgrep
 ```
 
 ## Configuration
@@ -122,8 +105,8 @@ The tool supports both simple presets and full YAML configuration files. The mat
 
 ```bash
 # Use a simple preset (no file path needed)
-./build/codesucks-ai -repo https://github.com/owner/repo -config basic
-./build/codesucks-ai -repo https://github.com/owner/repo -config comprehensive
+./run-codesucks.sh -repo https://github.com/owner/repo -config basic
+./run-codesucks.sh -repo https://github.com/owner/repo -config comprehensive
 ```
 
 ### Using Full YAML Configuration
@@ -184,22 +167,22 @@ The Matrix Build system automatically detects programming languages and framewor
 
 ```bash
 # Basic matrix build (auto-detection)
-./codesucks-ai --matrix-build -repo https://github.com/owner/repo
+./run-codesucks.sh --matrix-build -repo https://github.com/owner/repo
 
 # Override detected language
-./codesucks-ai --matrix-build --force-language python -repo https://github.com/owner/repo
+./run-codesucks.sh --matrix-build --force-language python -repo https://github.com/owner/repo
 
 # Override detected framework
-./codesucks-ai --matrix-build --force-framework django -repo https://github.com/owner/repo
+./run-codesucks.sh --matrix-build --force-framework django -repo https://github.com/owner/repo
 
 # Custom language threshold
-./codesucks-ai --matrix-build --language-threshold 15.0 -repo https://github.com/owner/repo
+./run-codesucks.sh --matrix-build --language-threshold 15.0 -repo https://github.com/owner/repo
 
 # Additional rulesets
-./codesucks-ai --matrix-build --additional-rulesets "p/security-audit,p/owasp-top10" -repo https://github.com/owner/repo
+./run-codesucks.sh --matrix-build --additional-rulesets "p/security-audit,p/owasp-top10" -repo https://github.com/owner/repo
 
 # Disable agent validation for faster scans
-./codesucks-ai --matrix-build --no-agent-validation -repo https://github.com/owner/repo
+./run-codesucks.sh --matrix-build --no-agent-validation -repo https://github.com/owner/repo
 ```
 
 ### Example Results
@@ -227,13 +210,16 @@ The orchestrator mode uses Claude Code subagents for parallel security analysis.
 
 ```bash
 # Basic orchestrator mode
-./build/codesucks-ai -repo https://github.com/owner/repo -orchestrator-mode
+./run-codesucks.sh -repo https://github.com/owner/repo -orchestrator-mode
 
-# With helper script
-./scripts/run-orchestrator.sh -r https://github.com/owner/repo
+# With automated setup script (handles all dependencies)
+./run-orchestrator.sh -r https://github.com/owner/repo
+
+# With MCP integration
+./run-orchestrator.sh -r https://github.com/owner/repo --mcp
 
 # Docker mode  
-./scripts/run-orchestrator.sh -r https://github.com/owner/repo --docker
+./run-orchestrator.sh -r https://github.com/owner/repo --docker
 ```
 
 ### 7-Phase Analysis Workflow
