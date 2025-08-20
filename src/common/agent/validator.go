@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -364,7 +363,7 @@ func (av *AgentValidator) loadPromptTemplate() (string, error) {
 		}
 	}
 
-	content, err := ioutil.ReadFile(promptPath)
+	content, err := os.ReadFile(promptPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to read agent.md: %w", err)
 	}
@@ -402,7 +401,7 @@ func (av *AgentValidator) formatRepositoryContext() string {
 func (av *AgentValidator) detectLanguage(tempDir string) string {
 	languages := make(map[string]int)
 
-	filepath.Walk(tempDir, func(path string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(tempDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return err
 		}
@@ -687,7 +686,7 @@ func (av *AgentValidator) sendRequest(prompt string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

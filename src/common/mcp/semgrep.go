@@ -84,7 +84,7 @@ func NewSemgrepMCPClient(config *SemgrepMCPConfig) (*SemgrepMCPClient, error) {
 
 	// Verify Semgrep tools are available
 	if err := verifySemgrepTools(client); err != nil {
-		return nil, fmt.Errorf("Semgrep tools not available: %w", err)
+		return nil, fmt.Errorf("semgrep tools not available: %w", err)
 	}
 
 	return &SemgrepMCPClient{

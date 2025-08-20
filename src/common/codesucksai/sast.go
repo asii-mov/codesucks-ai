@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -154,46 +153,6 @@ func buildSemgrepArgsForStdout(sourcePath, configPath string) []string {
 	return args
 }
 
-// buildSemgrepArgs constructs the command line arguments for Semgrep
-func buildSemgrepArgs(sourcePath, outputFile, configPath string) []string {
-	// Start with base args
-	args := []string{
-		"--json",
-		"--output", outputFile,
-		"--verbose",
-	}
-
-	// Handle configuration
-	if configPath == "auto" || configPath == "" {
-		// Use default comprehensive configuration
-		configPath = "configs/comprehensive.conf"
-	}
-
-	// Check if configPath is a preset name
-	if !strings.HasSuffix(configPath, ".conf") && !strings.Contains(configPath, "/") {
-		configPath = fmt.Sprintf("configs/%s.conf", configPath)
-	}
-
-	// Try to read configuration file
-	if configArgs := readConfigFile(configPath); len(configArgs) > 0 {
-		args = append(args, configArgs...)
-	} else {
-		// Fallback to default configuration
-		args = append(args,
-			"--config", "p/trailofbits",
-			"--config", "p/security-audit",
-			"--config", "p/secrets",
-			"--no-git-ignore",
-			"--timeout", "300",
-			"--max-target-bytes", "1000000",
-		)
-	}
-
-	// Add target path
-	args = append(args, sourcePath)
-
-	return args
-}
 
 // readConfigFile reads a configuration file and parses the FLAGS line
 func readConfigFile(configPath string) []string {
@@ -265,7 +224,7 @@ func parseFlags(flagsStr string) []string {
 // parseSemgrepOutput parses the JSON output from Semgrep
 func parseSemgrepOutput(outputFile string) (*common.SemgrepJson, error) {
 	// Read output file
-	data, err := ioutil.ReadFile(outputFile)
+	data, err := os.ReadFile(outputFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read Semgrep output file: %v", err)
 	}
@@ -324,7 +283,7 @@ func getSeverityFromMetadata(result common.Result) string {
 // GetVulnerabilityContext retrieves code context around a vulnerability
 func GetVulnerabilityContext(filePath string, startLine, endLine, contextLines int) (string, string, error) {
 	// Read file content
-	content, err := ioutil.ReadFile(filePath)
+	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to read file: %v", err)
 	}

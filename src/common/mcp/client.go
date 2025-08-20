@@ -140,7 +140,7 @@ func (c *Client) Request(ctx context.Context, method string, params map[string]i
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
-	defer httpResp.Body.Close()
+	defer func() { _ = httpResp.Body.Close() }()
 
 	// Read response
 	respData, err := io.ReadAll(httpResp.Body)

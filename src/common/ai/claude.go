@@ -37,7 +37,7 @@ func NewClaudeClient(apiKey string) *ClaudeClient {
 // AnalyzeVulnerability analyzes a semgrep finding and generates a security fix
 func (c *ClaudeClient) AnalyzeVulnerability(finding common.Result, fileContent, filePath string) (*common.SecurityAnalysis, error) {
 	if c.APIKey == "" {
-		return nil, fmt.Errorf("Anthropic API key is required")
+		return nil, fmt.Errorf("anthropic API key is required")
 	}
 
 	// Extract the vulnerable code lines
@@ -115,7 +115,7 @@ func (c *ClaudeClient) AnalyzeVulnerability(finding common.Result, fileContent, 
 // GenerateConversationResponse generates a response to user comments in GitHub issues
 func (c *ClaudeClient) GenerateConversationResponse(userComment string, fixes []common.SecurityFix) (string, error) {
 	if c.APIKey == "" {
-		return "", fmt.Errorf("Anthropic API key is required")
+		return "", fmt.Errorf("anthropic API key is required")
 	}
 
 	// Create context about the fixes
@@ -182,7 +182,7 @@ func (c *ClaudeClient) sendRequest(prompt string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to send request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

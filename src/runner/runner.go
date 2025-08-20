@@ -114,7 +114,7 @@ func scanWithLegacyMode(target string, options *common.Options) (*common.ScanRes
 	if err := os.MkdirAll(tempDir, 0755); err != nil {
 		return result, fmt.Errorf("failed to create temp directory: %v", err)
 	}
-	defer os.RemoveAll(tempDir) // Clean up temporary files
+	defer func() { _ = os.RemoveAll(tempDir) }() // Clean up temporary files
 
 	// Fetch repository content via GitHub API
 	sourcePath, err := githubClient.FetchRepositoryContent(owner, repo, repoInfo.Branch, tempDir)

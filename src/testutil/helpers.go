@@ -19,7 +19,7 @@ func SetupTestEnvironment(t *testing.T) {
 
 	// Create temp directory for test outputs
 	tempDir := t.TempDir()
-	os.Setenv("TEST_OUTPUT_DIR", tempDir)
+	_ = os.Setenv("TEST_OUTPUT_DIR", tempDir)
 }
 
 // CreateTestConfig creates a test configuration with defaults
@@ -115,16 +115,16 @@ func MockEnvVars(t *testing.T, vars map[string]string) func() {
 
 	// Set test values
 	for key, value := range vars {
-		os.Setenv(key, value)
+		_ = os.Setenv(key, value)
 	}
 
 	// Return cleanup function
 	return func() {
 		for key, value := range original {
 			if value == "" {
-				os.Unsetenv(key)
+				_ = os.Unsetenv(key)
 			} else {
-				os.Setenv(key, value)
+				_ = os.Setenv(key, value)
 			}
 		}
 	}

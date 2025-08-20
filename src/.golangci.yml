@@ -1,29 +1,22 @@
+version: 2
+
 run:
   timeout: 5m
   tests: true
 
 linters:
   enable:
-    - gofmt
     - govet
     - errcheck
     - staticcheck
     - unused
-    - gosimple
     - ineffassign
-    - typecheck
     - misspell
 
   disable:
     - gosec
-    - exhaustive
-    - funlen
-    - lll
 
 linters-settings:
-  gofmt:
-    simplify: true
-  
   errcheck:
     check-type-assertions: true
 
@@ -32,11 +25,9 @@ issues:
     - path: _test\.go
       linters:
         - errcheck
-        - dupl
     
     - path: vendor/
       linters:
-        - typecheck
         - unused
 
   max-issues-per-linter: 0

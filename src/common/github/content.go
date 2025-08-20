@@ -2,7 +2,6 @@ package github
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -88,7 +87,7 @@ func (gc *GitHubClient) fetchFileContent(owner, repo, branch, remotePath, localP
 	}
 
 	// Write file to local filesystem
-	if err := ioutil.WriteFile(localPath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(localPath, []byte(content), 0644); err != nil {
 		return fmt.Errorf("failed to write file: %v", err)
 	}
 

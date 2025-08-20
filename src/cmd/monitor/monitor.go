@@ -118,7 +118,7 @@ func validateAndSetup(repoURL string, issueNumber int, githubToken, anthropicKey
 		if key := os.Getenv("ANTHROPIC_API_KEY"); key != "" {
 			anthropicKey = key
 		} else {
-			return "", "", nil, nil, fmt.Errorf("Anthropic API key is required. Set ANTHROPIC_API_KEY env var or use --anthropic-key flag")
+			return "", "", nil, nil, fmt.Errorf("anthropic API key is required. Set ANTHROPIC_API_KEY env var or use --anthropic-key flag")
 		}
 	}
 

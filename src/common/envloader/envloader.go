@@ -83,7 +83,7 @@ func LoadEnvForTesting() error {
 	for _, path := range testEnvPaths {
 		if _, err := os.Stat(path); err == nil {
 			// Clear existing env vars first for consistent testing
-			godotenv.Overload(path)
+			_ = godotenv.Overload(path)
 			return nil
 		}
 	}

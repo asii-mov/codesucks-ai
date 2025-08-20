@@ -156,7 +156,11 @@ func (c *ClaudeSDKClient) SpawnAgent(agent *AgentProcess, codebaseContext *commo
 		"-p", prompt, // Print mode with prompt as first argument
 		"--output-format", "json",
 		"--append-system-prompt", string(agentConfig),
-		"--add-dir", codebaseContext.SourcePath, // Allow access to source code directory
+	}
+
+	// Add source directory if available
+	if codebaseContext != nil && codebaseContext.SourcePath != "" {
+		args = append(args, "--add-dir", codebaseContext.SourcePath)
 	}
 
 	if c.LogLevel == "DEBUG" {

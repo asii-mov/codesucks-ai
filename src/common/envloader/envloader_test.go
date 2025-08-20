@@ -37,8 +37,8 @@ func TestGetEnvWithDefault(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
 			if tt.envValue != "" {
-				os.Setenv(tt.envKey, tt.envValue)
-				defer os.Unsetenv(tt.envKey)
+				_ = os.Setenv(tt.envKey, tt.envValue)
+				defer func() { _ = os.Unsetenv(tt.envKey) }()
 			}
 
 			// Test
@@ -84,8 +84,8 @@ func TestValidateRequiredEnvVars(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
 			for key, value := range tt.setVars {
-				os.Setenv(key, value)
-				defer os.Unsetenv(key)
+				_ = os.Setenv(key, value)
+				defer func() { _ = os.Unsetenv(key) }()
 			}
 
 			// Test
@@ -112,8 +112,8 @@ TEST_ANOTHER_VAR=another_value`
 
 	// Change to temp directory
 	originalDir, _ := os.Getwd()
-	os.Chdir(tempDir)
-	defer os.Chdir(originalDir)
+	_ = os.Chdir(tempDir)
+	defer func() { _ = os.Chdir(originalDir) }()
 
 	// Test loading
 	err = LoadEnvFile()
@@ -124,8 +124,8 @@ TEST_ANOTHER_VAR=another_value`
 	assert.Equal(t, "another_value", os.Getenv("TEST_ANOTHER_VAR"))
 
 	// Cleanup
-	os.Unsetenv("TEST_ENV_VAR")
-	os.Unsetenv("TEST_ANOTHER_VAR")
+	_ = os.Unsetenv("TEST_ENV_VAR")
+	_ = os.Unsetenv("TEST_ANOTHER_VAR")
 }
 
 func TestLoadEnvForTesting(t *testing.T) {
