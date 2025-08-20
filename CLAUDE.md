@@ -56,7 +56,10 @@ ANTHROPIC_API_KEY=sk-ant-api03-xxxxxxxxxxxxx
 GITHUB_TOKEN=github_pat_xxxxxxxxxxxxx
 EOF
 
-# Run directly - .env is loaded automatically
+# Run using the wrapper script (recommended) - .env is loaded automatically  
+./run-codesucks.sh -repo https://github.com/owner/repo
+
+# Or run directly if needed
 ./build/codesucks-ai -repo https://github.com/owner/repo
 ```
 
@@ -74,10 +77,13 @@ common/                 # Shared components
 ├── report/             # HTML report generation
 └── types.go            # Shared data structures
 
-configs/                # Configuration presets
+configs/                # Configuration presets (6 total)
 ├── basic.yaml          # Quick scan configuration
 ├── comprehensive.yaml  # Full analysis
-└── enterprise.yaml     # Compliance-focused
+├── orchestrator.yaml   # AI deep analysis
+├── orchestrator-no-autofix.yaml  # Analysis-only mode
+├── batch-processing.yaml # Multiple repository scanning
+└── matrix-base.yaml    # Template for matrix build system
 
 docs/                   # Documentation
 ├── SEMGREP-MCP.md      # MCP integration guide
@@ -119,28 +125,41 @@ start-semgrep-mcp
 test-semgrep-mcp
 ```
 
-### Orchestrator Mode Usage
+### Basic Usage (Recommended)
+```bash
+# Basic comprehensive scan with wrapper script
+./run-codesucks.sh -repo https://github.com/owner/repo
+
+# Matrix build with intelligent language detection
+./run-codesucks.sh --matrix-build -repo https://github.com/owner/repo
+
+# Basic scan with different presets
+./run-codesucks.sh -config basic -repo https://github.com/owner/repo
+./run-codesucks.sh -config comprehensive -repo https://github.com/owner/repo
+```
+
+### Orchestrator Mode Usage (Advanced)
 ```bash
 # AI Orchestrator with 5 Claude Code subagents (requires Claude CLI)
-./build/codesucks-ai -orchestrator-mode -repo https://github.com/owner/repo
+./run-codesucks.sh -orchestrator-mode -repo https://github.com/owner/repo
 
 # Orchestrator with MCP integration
-./build/codesucks-ai -orchestrator-mode -use-mcp-semgrep -repo https://github.com/owner/repo
+./run-codesucks.sh -orchestrator-mode -use-mcp-semgrep -repo https://github.com/owner/repo
 
-# Using orchestrator script
-./scripts/run-orchestrator.sh -r https://github.com/owner/repo
+# Using orchestrator script (handles setup automatically)
+./run-orchestrator.sh -r https://github.com/owner/repo
 ```
 
 ### MCP Usage
 ```bash
 # Use MCP mode (preferred for enhanced AI integration)
-./build/codesucks-ai -use-mcp-semgrep -repo https://github.com/owner/repo
+./run-codesucks.sh -use-mcp-semgrep -repo https://github.com/owner/repo
 
 # With custom MCP server
-./build/codesucks-ai -use-mcp-semgrep -mcp-server http://localhost:8080 -repo https://github.com/owner/repo
+./run-codesucks.sh -use-mcp-semgrep -mcp-server http://localhost:8080 -repo https://github.com/owner/repo
 
 # Enable advanced features
-./build/codesucks-ai -use-mcp-semgrep -enable-ast -enable-custom-rules -repo https://github.com/owner/repo
+./run-codesucks.sh -use-mcp-semgrep -enable-ast -enable-custom-rules -repo https://github.com/owner/repo
 ```
 
 ### Fallback Mechanism
@@ -206,11 +225,13 @@ The codebase follows security best practices and is intended for legitimate secu
 - Critical security components: 90%+ coverage
 - View reports: `make test-coverage` then open `coverage/coverage.html`
 
-### Configuration Presets
+### Configuration Presets (6 total)
 - `basic.yaml` - Quick scan (~2 min)
 - `comprehensive.yaml` - Full analysis (~10 min)  
-- `enterprise.yaml` - Compliance-focused (~15 min)
 - `orchestrator.yaml` - AI deep analysis (~20 min)
+- `orchestrator-no-autofix.yaml` - Analysis-only mode
+- `batch-processing.yaml` - Multiple repository scanning
+- `matrix-base.yaml` - Template for matrix build system
 
 ## Analysis Modes
 
@@ -384,7 +405,10 @@ The matrix build system is now completely functional:
 - `src/common/detector/framework_detector.go`: Fixed invalid ruleset mappings (p/express -> p/javascript)
 - `src/common/report/html.go` & `template.go`: Enhanced reports to display matrix configuration
 
-- Always test against this URL: https://github.com/asii-mov/NodeGoat-AI-test
+### Testing Instructions
+- **Always test against this URL**: https://github.com/asii-mov/NodeGoat-AI-test  
+- **Use wrapper script**: `./run-codesucks.sh -repo https://github.com/asii-mov/NodeGoat-AI-test`
+- **Expected results**: 20 vulnerabilities found with matrix build detection of "HTML + Next.js"
 - Multi-language test: https://github.com/coleam00/Archon
 
 ## Technical Debt Cleanup (COMPLETED)
@@ -441,3 +465,26 @@ A comprehensive technical debt cleanup was completed to address incomplete imple
 - ✅ Linting passes
 - ✅ Complete orchestrator workflow functional
 - ✅ All major technical debt resolved
+
+## Recent Improvements (Latest)
+
+### User Experience Enhancement (feature/restructure branch)
+- **Created `run-codesucks.sh` wrapper script** for easier usage at repository root
+- **Reorganized README.md** to start with basic usage instead of orchestrator
+- **Fixed Installation section** to include default venv setup for MCP/Semgrep
+- **Updated all examples** to use shorter wrapper script instead of `./build/codesucks-ai`
+- **Clarified orchestrator positioning** as advanced feature, not primary interface
+
+### Configuration Cleanup 
+- **Removed compliance scanning** - eliminated unnecessary "enterprise" complexity
+- **Deleted `configs/enterprise.yaml`** - redundant with comprehensive config
+- **Removed compliance preset** from CLI and MCP code
+- **Simplified to 6 essential configs** (down from original 18)
+- **Matrix system handles** appropriate ruleset selection automatically
+
+### Critical .gitignore Fix
+- **Fixed .gitignore patterns** that were incorrectly ignoring source files
+- **Restored missing `src/cmd/` files** to git repository
+- **Removed overly broad ignore patterns** (`codesucks-ai`, `sastsweep`, `monitor`)
+- **Repository now complete** and buildable from fresh clone
+- **Root cause** of build failures when cloning to new locations resolved
