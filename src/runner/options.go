@@ -25,7 +25,7 @@ func ParseOptions() (*common.Options, error) {
 	// Scanning configuration
 	flag.BoolVar(&options.NoSemgrep, "no-semgrep", false, "Skip Semgrep static analysis")
 	flag.StringVar(&options.SemgrepPath, "semgrep-path", "semgrep", "Path to semgrep binary")
-	flag.StringVar(&options.ConfigPath, "config", "comprehensive", "Semgrep config path or preset (basic, comprehensive, security-focused, compliance)")
+	flag.StringVar(&options.ConfigPath, "config", "comprehensive", "Semgrep config path or preset (basic, comprehensive, security-focused)")
 	flag.BoolVar(&options.NoTruffleHog, "no-trufflehog", false, "Skip TruffleHog secret scanning")
 	flag.StringVar(&options.TruffleHogPath, "trufflehog-path", "trufflehog", "Path to trufflehog binary")
 	flag.BoolVar(&options.VerifySecrets, "verify-secrets", false, "Only return verified secrets from TruffleHog")
@@ -358,8 +358,7 @@ func printPresets() {
 	fmt.Println("├─ basic             Minimal ruleset for fast scanning (p/trailofbits)")
 	fmt.Println("├─ codesucks-ai      Default balanced configuration (recommended)")
 	fmt.Println("├─ security-focused  Security vulnerabilities and secrets")
-	fmt.Println("├─ comprehensive     All available rulesets for maximum coverage")
-	fmt.Println("└─ compliance        Enterprise compliance focused (CWE, supply chain)")
+	fmt.Println("└─ comprehensive     All available rulesets for maximum coverage")
 	fmt.Println()
 	fmt.Println("USAGE:")
 	fmt.Println("  codesucks-ai -config <preset-name> [other options...]")

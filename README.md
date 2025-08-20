@@ -105,8 +105,6 @@ EOF
 # Matrix Build with custom language override
 ./build/codesucks-ai -repo https://github.com/owner/repo -matrix-build --force-language python
 
-# Enterprise scan with compliance focus
-./build/codesucks-ai -repo https://github.com/owner/repo -config-file configs/enterprise.yaml
 
 # Manual MCP setup and usage
 uv venv mcp-env
@@ -125,8 +123,7 @@ The tool supports both simple presets and full YAML configuration files. The mat
 ```bash
 # Use a simple preset (no file path needed)
 ./build/codesucks-ai -repo https://github.com/owner/repo -config basic
-./build/codesucks-ai -repo https://github.com/owner/repo -config comprehensive  
-./build/codesucks-ai -repo https://github.com/owner/repo -config enterprise
+./build/codesucks-ai -repo https://github.com/owner/repo -config comprehensive
 ```
 
 ### Using Full YAML Configuration
@@ -166,7 +163,6 @@ Choose from these optimized configurations:
 
 - **`basic.yaml`** - Quick scan with minimal rules (~2 min)
 - **`comprehensive.yaml`** - Full analysis with all security rules (~10 min) 
-- **`enterprise.yaml`** - Compliance-focused for enterprise environments (~15 min)
 - **`orchestrator.yaml`** - AI deep analysis with 5 parallel agents (~20 min)
 - **`orchestrator-no-autofix.yaml`** - Analysis-only mode without auto-fixes
 - **`batch-processing.yaml`** - Optimized for multiple repository scanning

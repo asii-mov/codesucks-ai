@@ -100,7 +100,6 @@ func (s *MCPSemgrepScanner) determineConfig() string {
 		"basic":            "p/default",
 		"comprehensive":    "p/security-audit p/secrets p/owasp-top-ten",
 		"security-focused": "p/security-audit p/owasp-top-ten p/cwe-top-25",
-		"compliance":       "p/pci-dss p/hipaa p/gdpr",
 	}
 
 	if preset, ok := presets[config]; ok {
