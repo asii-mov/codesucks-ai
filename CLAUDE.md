@@ -194,10 +194,10 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # Install dependencies
 cd src && make deps && cd ..
 
-# Setup MCP environment with uv (recommended)
-uv venv mcp-env
-source mcp-env/bin/activate
-uv pip install semgrep-mcp semgrep
+# Setup Python environment with uv (REQUIRED for all Semgrep usage)
+uv venv codesucks
+source codesucks/bin/activate
+uv pip install semgrep semgrep-mcp
 
 # Build application
 cd src && make build && cd ..
