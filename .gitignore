@@ -18,6 +18,7 @@ findings/
 *-findings/
 reports/
 scans/
+sessions/
 
 # Temporary files
 temp/
