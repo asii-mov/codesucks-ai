@@ -81,7 +81,13 @@ EOF
 
 ```bash
 # IMPORTANT: Always activate the Python virtual environment first
+# If you haven't created it yet, run the installation commands above
 source semgrep-env/bin/activate
+
+# If virtual environment doesn't exist, create it first:
+# uv venv semgrep-env
+# source semgrep-env/bin/activate  
+# uv pip install semgrep semgrep-mcp
 
 # Basic scan with comprehensive analysis (recommended)
 ./run-codesucks.sh -repo https://github.com/owner/repo
