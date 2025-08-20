@@ -41,8 +41,8 @@ cd src && make build && cd ..
 
 # Setup Python virtual environment for Semgrep (REQUIRED)
 # This ensures clean dependency management for all Semgrep operations
-uv venv semgrep-env
-source semgrep-env/bin/activate
+uv venv codesucks
+source codesucks/bin/activate
 uv pip install semgrep semgrep-mcp
 ```
 
@@ -82,11 +82,11 @@ EOF
 ```bash
 # IMPORTANT: Always activate the Python virtual environment first
 # If you haven't created it yet, run the installation commands above
-source semgrep-env/bin/activate
+source codesucks/bin/activate
 
 # If virtual environment doesn't exist, create it first:
-# uv venv semgrep-env
-# source semgrep-env/bin/activate  
+# uv venv codesucks
+# source codesucks/bin/activate  
 # uv pip install semgrep semgrep-mcp
 
 # Basic scan with comprehensive analysis (recommended)
