@@ -1,8 +1,5 @@
 # Build artifacts
 build/
-codesucks-ai
-sastsweep
-monitor
 *.exe
 *.dll
 *.so
