@@ -21,7 +21,7 @@ AI-powered security analysis tool combining static analysis with intelligent vul
 
 - Go 1.21+
 - Claude Code CLI (for orchestrator mode)
-- Python 3.8+ (for Semgrep MCP server)
+- Python 3.8+ with uv (REQUIRED for Semgrep virtual environment)
 - TruffleHog (optional - for secret scanning, install separately based on your platform)
 - Docker (optional)
 - GitHub Personal Access Token
@@ -39,9 +39,10 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # Build the application
 cd src && make build && cd ..
 
-# Setup Python virtual environment for Semgrep and MCP
-uv venv mcp-env
-source mcp-env/bin/activate
+# Setup Python virtual environment for Semgrep (REQUIRED)
+# This ensures clean dependency management for all Semgrep operations
+uv venv semgrep-env
+source semgrep-env/bin/activate
 uv pip install semgrep semgrep-mcp
 ```
 
@@ -79,6 +80,9 @@ EOF
 **Basic Usage:**
 
 ```bash
+# IMPORTANT: Always activate the Python virtual environment first
+source semgrep-env/bin/activate
+
 # Basic scan with comprehensive analysis (recommended)
 ./run-codesucks.sh -repo https://github.com/owner/repo
 
@@ -92,7 +96,6 @@ EOF
 ./run-codesucks.sh -repo https://github.com/owner/repo -matrix-build --force-language python
 
 # With MCP integration for enhanced AI analysis
-source mcp-env/bin/activate
 python -m semgrep_mcp.server &
 ./run-codesucks.sh -repo https://github.com/owner/repo -use-mcp-semgrep
 ```
