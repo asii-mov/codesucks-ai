@@ -15,26 +15,26 @@ import (
 
 // IncrementalScanner implements incremental scanning capabilities
 type IncrementalScanner struct {
-	options        *common.Options
-	lastScanCache  *ScanCache
-	cacheFile      string
+	options       *common.Options
+	lastScanCache *ScanCache
+	cacheFile     string
 }
 
 // ScanCache stores information about the last scan
 type ScanCache struct {
-	LastScanTime   time.Time               `json:"last_scan_time"`
-	FileHashes     map[string]string       `json:"file_hashes"`
+	LastScanTime    time.Time                         `json:"last_scan_time"`
+	FileHashes      map[string]string                 `json:"file_hashes"`
 	Vulnerabilities map[string][]common.Vulnerability `json:"vulnerabilities"`
-	Repository     string                  `json:"repository"`
-	Branch         string                  `json:"branch"`
-	Commit         string                  `json:"commit"`
+	Repository      string                            `json:"repository"`
+	Branch          string                            `json:"branch"`
+	Commit          string                            `json:"commit"`
 }
 
 // NewIncrementalScanner creates a new incremental scanner
 func NewIncrementalScanner(options *common.Options) *IncrementalScanner {
 	cacheDir := filepath.Join(options.OutDir, ".scan-cache")
 	os.MkdirAll(cacheDir, 0755)
-	
+
 	return &IncrementalScanner{
 		options:   options,
 		cacheFile: filepath.Join(cacheDir, "last-scan.json"),
@@ -48,18 +48,18 @@ func (s *IncrementalScanner) GetChangedFiles(repoPath string) ([]string, error) 
 		// No cache means first scan - return all files
 		return s.getAllSourceFiles(repoPath)
 	}
-	
+
 	// Get current commit
 	currentCommit, err := s.getCurrentCommit(repoPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get current commit: %w", err)
 	}
-	
+
 	// If on different commit, use git diff
 	if s.lastScanCache.Commit != "" && s.lastScanCache.Commit != currentCommit {
 		return s.getGitChangedFiles(repoPath, s.lastScanCache.Commit, currentCommit)
 	}
-	
+
 	// Otherwise, use file modification times
 	return s.getModifiedFiles(repoPath)
 }
@@ -70,7 +70,7 @@ func (s *IncrementalScanner) loadCache() error {
 	if err != nil {
 		return err
 	}
-	
+
 	cache := &ScanCache{}
 	if err := json.Unmarshal(data, cache); err != nil {
 		return err
@@ -79,7 +79,7 @@ func (s *IncrementalScanner) loadCache() error {
 	return nil
 }
 
-// SaveCache saves the scan cache to disk  
+// SaveCache saves the scan cache to disk
 func (s *IncrementalScanner) SaveCache(repoPath string, vulnerabilities []common.Vulnerability) error {
 	commit, _ := s.getCurrentCommit(repoPath)
 	cache := &ScanCache{
@@ -90,12 +90,12 @@ func (s *IncrementalScanner) SaveCache(repoPath string, vulnerabilities []common
 		Branch:          s.getCurrentBranch(repoPath),
 		Commit:          commit,
 	}
-	
+
 	data, err := json.MarshalIndent(cache, "", "  ")
 	if err != nil {
 		return err
 	}
-	
+
 	return os.WriteFile(s.cacheFile, data, 0644)
 }
 
@@ -129,7 +129,7 @@ func (s *IncrementalScanner) getGitChangedFiles(repoPath, fromCommit, toCommit s
 	if err != nil {
 		return nil, fmt.Errorf("failed to get git diff: %w", err)
 	}
-	
+
 	var files []string
 	scanner := bufio.NewScanner(strings.NewReader(string(output)))
 	for scanner.Scan() {
@@ -138,7 +138,7 @@ func (s *IncrementalScanner) getGitChangedFiles(repoPath, fromCommit, toCommit s
 			files = append(files, file)
 		}
 	}
-	
+
 	return files, nil
 }
 
@@ -146,46 +146,46 @@ func (s *IncrementalScanner) getGitChangedFiles(repoPath, fromCommit, toCommit s
 func (s *IncrementalScanner) getModifiedFiles(repoPath string) ([]string, error) {
 	var modifiedFiles []string
 	lastScanTime := s.lastScanCache.LastScanTime
-	
+
 	err := filepath.Walk(repoPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil // Skip errors
 		}
-		
+
 		if info.IsDir() || !s.isSourceFile(path) {
 			return nil
 		}
-		
+
 		// Check if modified since last scan
 		if info.ModTime().After(lastScanTime) {
 			relPath, _ := filepath.Rel(repoPath, path)
 			modifiedFiles = append(modifiedFiles, relPath)
 		}
-		
+
 		return nil
 	})
-	
+
 	return modifiedFiles, err
 }
 
 // getAllSourceFiles returns all source files in the repository
 func (s *IncrementalScanner) getAllSourceFiles(repoPath string) ([]string, error) {
 	var sourceFiles []string
-	
+
 	err := filepath.Walk(repoPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil // Skip errors
 		}
-		
+
 		if info.IsDir() || !s.isSourceFile(path) {
 			return nil
 		}
-		
+
 		relPath, _ := filepath.Rel(repoPath, path)
 		sourceFiles = append(sourceFiles, relPath)
 		return nil
 	})
-	
+
 	return sourceFiles, err
 }
 
@@ -223,13 +223,13 @@ func (s *IncrementalScanner) MergeWithCachedResults(newVulnerabilities []common.
 	if s.lastScanCache == nil {
 		return newVulnerabilities
 	}
-	
+
 	// Create a set of changed files for quick lookup
 	changedSet := make(map[string]bool)
 	for _, file := range changedFiles {
 		changedSet[file] = true
 	}
-	
+
 	// Add cached vulnerabilities for unchanged files
 	var mergedResults []common.Vulnerability
 	for file, vulns := range s.lastScanCache.Vulnerabilities {
@@ -237,10 +237,10 @@ func (s *IncrementalScanner) MergeWithCachedResults(newVulnerabilities []common.
 			mergedResults = append(mergedResults, vulns...)
 		}
 	}
-	
+
 	// Add new vulnerabilities
 	mergedResults = append(mergedResults, newVulnerabilities...)
-	
+
 	return mergedResults
 }
 
@@ -249,10 +249,10 @@ func (s *IncrementalScanner) GetScanStatistics(totalFiles, changedFiles int) str
 	if s.lastScanCache == nil {
 		return fmt.Sprintf("Initial scan: %d files analyzed", totalFiles)
 	}
-	
+
 	percentage := float64(changedFiles) / float64(totalFiles) * 100
 	timeSaved := (1.0 - float64(changedFiles)/float64(totalFiles)) * 100
-	
+
 	return fmt.Sprintf(
 		"Incremental scan: %d of %d files changed (%.1f%%), estimated %.0f%% time saved",
 		changedFiles, totalFiles, percentage, timeSaved,

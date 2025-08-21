@@ -157,7 +157,7 @@ func ParseOptions() (*common.Options, error) {
 
 	// Load environment variables if flags not provided
 	loadEnvironmentVars(mergedOptions)
-	
+
 	// Set clone defaults if not specified
 	if mergedOptions.CloneSizeThreshold == 0 {
 		mergedOptions.CloneSizeThreshold = 50 // 50 MB default

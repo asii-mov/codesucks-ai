@@ -119,7 +119,7 @@ func scanWithLegacyMode(target string, options *common.Options) (*common.ScanRes
 	if err := os.MkdirAll(tempDir, 0755); err != nil {
 		return result, fmt.Errorf("failed to create temp directory: %v", err)
 	}
-	
+
 	// Ensure cleanup happens even on panic
 	var sourcePath string
 	cleanupFunc := func() {

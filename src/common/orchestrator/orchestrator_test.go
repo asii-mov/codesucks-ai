@@ -101,8 +101,8 @@ func TestAgentResultParsing(t *testing.T) {
 			expected: 1,
 		},
 		{
-			name: "JSON in markdown code block",
-			input: []byte("Some text\n```json\n{\"vulnerabilities\": [{\"type\": \"XSS\"}]}\n```\nMore text"),
+			name:     "JSON in markdown code block",
+			input:    []byte("Some text\n```json\n{\"vulnerabilities\": [{\"type\": \"XSS\"}]}\n```\nMore text"),
 			expected: 1,
 		},
 		{
@@ -121,7 +121,7 @@ func TestAgentResultParsing(t *testing.T) {
 			content := orchestrator.extractContentFromClaudeResponse(tc.input)
 			agent := common.AnalysisAgent{AgentID: "test", AgentType: "test-type"}
 			results := orchestrator.parseAgentVulnerabilities(content, agent)
-			
+
 			if len(results.Vulnerabilities) != tc.expected {
 				t.Errorf("Expected %d vulnerabilities, got %d", tc.expected, len(results.Vulnerabilities))
 			}

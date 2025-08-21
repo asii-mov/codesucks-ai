@@ -92,7 +92,7 @@ func (s *EnhancedSASTScanner) Scan(repoPath string) (*common.SemgrepResult, erro
 		}
 
 		fmt.Printf("🔍 Attempting scan with %s...\n", scanner.Name())
-		
+
 		result, err := scanner.Scan(ctx, repoPath)
 		if err != nil {
 			fmt.Printf("⚠️ %s failed: %v\n", scanner.Name(), err)
@@ -128,7 +128,7 @@ func (m *MCPSemgrepScanner) Name() string {
 func (m *MCPSemgrepScanner) IsAvailable() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	
+
 	return m.client.Ping(ctx) == nil
 }
 
@@ -139,7 +139,7 @@ func NewCLISemgrepScanner(options *common.Options) *CLISemgrepScanner {
 	if semgrepPath == "" {
 		semgrepPath = "semgrep"
 	}
-	
+
 	return &CLISemgrepScanner{
 		options:     options,
 		semgrepPath: semgrepPath,
@@ -173,7 +173,7 @@ func (c *CLISemgrepScanner) IsAvailable() bool {
 	if err == nil {
 		return true
 	}
-	
+
 	// Try to find in PATH
 	paths := strings.Split(os.Getenv("PATH"), string(os.PathListSeparator))
 	for _, path := range paths {
@@ -183,7 +183,7 @@ func (c *CLISemgrepScanner) IsAvailable() bool {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -197,7 +197,7 @@ func NewBasicScanner(options *common.Options) *BasicScanner {
 
 func (b *BasicScanner) Scan(ctx context.Context, repoPath string) (*common.SemgrepResult, error) {
 	fmt.Println("⚠️ Using basic pattern scanner (limited detection)")
-	
+
 	result := &common.SemgrepResult{
 		Vulnerabilities: []common.Vulnerability{},
 		Summary: common.SemgrepSummary{
@@ -208,45 +208,45 @@ func (b *BasicScanner) Scan(ctx context.Context, repoPath string) (*common.Semgr
 
 	// Perform basic pattern matching for common vulnerabilities
 	patterns := b.getBasicPatterns()
-	
+
 	err := filepath.Walk(repoPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil // Skip errors
 		}
-		
+
 		if info.IsDir() || !b.isSourceFile(path) {
 			return nil
 		}
-		
+
 		// Check for context cancellation
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
 		}
-		
+
 		// Read file and check patterns
 		content, err := os.ReadFile(path)
 		if err != nil {
 			return nil // Skip unreadable files
 		}
-		
+
 		findings := b.checkPatterns(path, string(content), patterns)
 		for _, finding := range findings {
 			result.Vulnerabilities = append(result.Vulnerabilities, convertResultToVulnerability(finding))
 		}
 		result.Summary.FilesScanned++
-		
+
 		return nil
 	})
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("basic scan failed: %w", err)
 	}
-	
+
 	// Update summary
 	result.Summary.TotalFindings = len(result.Vulnerabilities)
-	
+
 	return result, nil
 }
 
@@ -296,7 +296,7 @@ func (b *BasicScanner) getBasicPatterns() map[string][]string {
 func (b *BasicScanner) checkPatterns(filePath, content string, patterns map[string][]string) []common.Result {
 	var results []common.Result
 	lines := strings.Split(content, "\n")
-	
+
 	for vulnType, patternList := range patterns {
 		for _, pattern := range patternList {
 			for lineNum, line := range lines {
@@ -338,7 +338,7 @@ func (b *BasicScanner) checkPatterns(filePath, content string, patterns map[stri
 			}
 		}
 	}
-	
+
 	return results
 }
 
@@ -352,13 +352,13 @@ func convertToSemgrepResult(json *common.SemgrepJson) *common.SemgrepResult {
 	if json == nil {
 		return &common.SemgrepResult{}
 	}
-	
+
 	// Convert Results to Vulnerabilities
 	var vulnerabilities []common.Vulnerability
 	for _, result := range json.Results {
 		vulnerabilities = append(vulnerabilities, convertResultToVulnerability(result))
 	}
-	
+
 	return &common.SemgrepResult{
 		Vulnerabilities: vulnerabilities,
 		Summary: common.SemgrepSummary{

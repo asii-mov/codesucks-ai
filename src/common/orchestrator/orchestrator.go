@@ -220,7 +220,7 @@ func (o *SecurityOrchestrator) phase2_AnalyzeCodebaseStructure(repoURL string) (
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch repository content: %w", err)
 	}
-	
+
 	// Schedule cleanup for orchestrator completion
 	defer func() {
 		if err := github.CleanupRepository(sourcePath); err != nil {
@@ -459,11 +459,11 @@ func (o *SecurityOrchestrator) phase5_ExecuteParallelCodeAnalysis(repoContext *c
 			// Record agent completion metrics
 			endTime := time.Now()
 			metrics := &AgentMetrics{
-				AgentID:       agentInfo.AgentID,
-				AgentType:     agentInfo.AgentType,
-				EndTime:       endTime,
-				VulnsFound:    len(results.Vulnerabilities),
-				Status:        "completed",
+				AgentID:    agentInfo.AgentID,
+				AgentType:  agentInfo.AgentType,
+				EndTime:    endTime,
+				VulnsFound: len(results.Vulnerabilities),
+				Status:     "completed",
 			}
 
 			fmt.Printf("✅ Agent %s completed: %d vulnerabilities found (execution time: %v)\n",
@@ -682,16 +682,16 @@ func (o *SecurityOrchestrator) filterFilesByPatterns(patterns []string) []string
 
 // AgentMetrics tracks performance metrics for an agent
 type AgentMetrics struct {
-	AgentID         string        `json:"agent_id"`
-	AgentType       string        `json:"agent_type"`
-	StartTime       time.Time     `json:"start_time"`
-	EndTime         time.Time     `json:"end_time"`
-	ExecutionTime   time.Duration `json:"execution_time"`
-	MemoryUsageMB   int64         `json:"memory_usage_mb"`
-	FilesAnalyzed   int           `json:"files_analyzed"`
-	VulnsFound      int           `json:"vulnerabilities_found"`
-	Status          string        `json:"status"`
-	ErrorCount      int           `json:"error_count"`
+	AgentID       string        `json:"agent_id"`
+	AgentType     string        `json:"agent_type"`
+	StartTime     time.Time     `json:"start_time"`
+	EndTime       time.Time     `json:"end_time"`
+	ExecutionTime time.Duration `json:"execution_time"`
+	MemoryUsageMB int64         `json:"memory_usage_mb"`
+	FilesAnalyzed int           `json:"files_analyzed"`
+	VulnsFound    int           `json:"vulnerabilities_found"`
+	Status        string        `json:"status"`
+	ErrorCount    int           `json:"error_count"`
 }
 
 func (o *SecurityOrchestrator) monitorAgentProgress(agentID string) error {
@@ -701,11 +701,11 @@ func (o *SecurityOrchestrator) monitorAgentProgress(agentID string) error {
 		StartTime: time.Now(),
 		Status:    "running",
 	}
-	
+
 	// Store metrics in state (would need to add AgentMetrics field to state)
 	// For now, just log the progress
 	fmt.Printf("📊 Monitoring agent %s - started at %s\n", agentID, metrics.StartTime.Format("15:04:05"))
-	
+
 	return nil
 }
 
@@ -713,19 +713,19 @@ func (o *SecurityOrchestrator) monitorAgentProgress(agentID string) error {
 func (o *SecurityOrchestrator) displayAgentPerformanceSummary() {
 	fmt.Println("\n📊 Agent Performance Summary:")
 	fmt.Println("═══════════════════════════════════════════════════════")
-	
+
 	totalVulns := 0
 	totalTime := time.Duration(0)
-	
+
 	for _, agent := range o.State.AnalysisAgents {
 		fmt.Printf("Agent: %s (%s)\n", agent.AgentID, agent.AgentType)
 		fmt.Printf("  ├─ Status: %s\n", agent.Status)
 		fmt.Printf("  ├─ Files Analyzed: %d\n", agent.FilesAnalyzed)
 		fmt.Printf("  └─ Vulnerabilities Found: %d\n", agent.VulnerabilitiesFound)
-		
+
 		totalVulns += agent.VulnerabilitiesFound
 	}
-	
+
 	fmt.Printf("\nTotal Vulnerabilities: %d\n", totalVulns)
 	fmt.Printf("Total Execution Time: %v\n", totalTime)
 	fmt.Println("═══════════════════════════════════════════════════════")
@@ -968,7 +968,7 @@ func (o *SecurityOrchestrator) findMostVulnerableComponents(results []common.Val
 
 func (o *SecurityOrchestrator) phase7_GenerateCodeSecurityReport() (string, error) {
 	fmt.Println("🔄 Phase 7: Generate Code Security Report")
-	
+
 	// Display agent performance summary
 	o.displayAgentPerformanceSummary()
 
@@ -1116,7 +1116,7 @@ func (o *SecurityOrchestrator) extractContentFromClaudeResponse(data []byte) str
 func (o *SecurityOrchestrator) parseAgentVulnerabilities(content string, agent common.AnalysisAgent) common.AgentResults {
 	// Clean up content first
 	content = strings.TrimSpace(content)
-	
+
 	// Try to extract JSON from the content (Claude often puts JSON in code blocks)
 	jsonStart := strings.Index(content, "{")
 	jsonEnd := strings.LastIndex(content, "}")

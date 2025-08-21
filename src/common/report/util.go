@@ -311,34 +311,34 @@ func convertToCommonReportData(data *ReportData) *common.ReportData {
 	if data == nil {
 		return nil
 	}
-	
+
 	// Convert to the older common.ReportData format
 	// Map severity stats
 	severityStats := make(map[string]int)
 	for k, v := range data.SeverityDistribution {
 		severityStats[k] = v
 	}
-	
+
 	// Convert vulnerabilities to findings
 	var findings []common.SemgrepFinding
 	for _, vuln := range data.Vulnerabilities {
 		findings = append(findings, common.SemgrepFinding{
 			VulnerabilityTitle: vuln.CheckID,
-			Severity:          vuln.Extra.Metadata.Impact,
-			Description:       vuln.Extra.Message,
-			Code:              vuln.Extra.Lines,
-			StartLine:         vuln.Start.Line,
-			StopLine:          vuln.End.Line,
-			GithubLink:        vuln.Path,
+			Severity:           vuln.Extra.Metadata.Impact,
+			Description:        vuln.Extra.Message,
+			Code:               vuln.Extra.Lines,
+			StartLine:          vuln.Start.Line,
+			StopLine:           vuln.End.Line,
+			GithubLink:         vuln.Path,
 		})
 	}
-	
+
 	return &common.ReportData{
-		Target:                     data.Repository,
-		DefaultBranch:              data.Branch,
-		VulnerabilityStats:         calculateTypeDistribution(data),
-		SeverityStats:              severityStats,
-		Findings:                   findings,
+		Target:             data.Repository,
+		DefaultBranch:      data.Branch,
+		VulnerabilityStats: calculateTypeDistribution(data),
+		SeverityStats:      severityStats,
+		Findings:           findings,
 	}
 }
 

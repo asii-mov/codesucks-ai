@@ -16,14 +16,14 @@ import (
 func GenerateHTMLReport(data *ReportData, outputPath string) error {
 	// Convert to common.ReportData for backward compatibility
 	commonData := convertToCommonReportData(data)
-	
+
 	// Generate HTML using existing function
 	outDir := filepath.Dir(outputPath)
 	generatedPath, err := GenerateHTML(commonData, outDir)
 	if err != nil {
 		return err
 	}
-	
+
 	// Rename to desired output path if different
 	if generatedPath != outputPath {
 		if err := os.Rename(generatedPath, outputPath); err != nil {
@@ -31,7 +31,7 @@ func GenerateHTMLReport(data *ReportData, outputPath string) error {
 			fmt.Printf("Warning: Could not rename report to %s: %v\n", outputPath, err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -101,7 +101,7 @@ func extractCodeSnippet(filePath string, startLine, endLine int) string {
 	scanner := bufio.NewScanner(file)
 	lineNum := 1
 	var lines []string
-	
+
 	// Read the file line by line
 	for scanner.Scan() {
 		if lineNum >= startLine && lineNum <= endLine {
@@ -112,7 +112,7 @@ func extractCodeSnippet(filePath string, startLine, endLine int) string {
 		}
 		lineNum++
 	}
-	
+
 	// Join the lines
 	if len(lines) > 0 {
 		return strings.Join(lines, "\n")

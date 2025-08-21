@@ -23,11 +23,11 @@ type SARIFReport struct {
 
 // SARIFRun represents a single run of an analysis tool
 type SARIFRun struct {
-	Tool         SARIFTool          `json:"tool"`
-	Results      []SARIFResult      `json:"results"`
-	Artifacts    []SARIFArtifact    `json:"artifacts,omitempty"`
-	Taxonomies   []SARIFTaxonomy    `json:"taxonomies,omitempty"`
-	Properties   map[string]interface{} `json:"properties,omitempty"`
+	Tool       SARIFTool              `json:"tool"`
+	Results    []SARIFResult          `json:"results"`
+	Artifacts  []SARIFArtifact        `json:"artifacts,omitempty"`
+	Taxonomies []SARIFTaxonomy        `json:"taxonomies,omitempty"`
+	Properties map[string]interface{} `json:"properties,omitempty"`
 }
 
 // SARIFTool represents the analysis tool that was run
@@ -37,21 +37,21 @@ type SARIFTool struct {
 
 // SARIFToolComponent represents a component of the tool
 type SARIFToolComponent struct {
-	Name            string         `json:"name"`
-	Version         string         `json:"version"`
-	SemanticVersion string         `json:"semanticVersion"`
-	InformationURI  string         `json:"informationUri"`
-	Rules           []SARIFRule    `json:"rules"`
+	Name            string      `json:"name"`
+	Version         string      `json:"version"`
+	SemanticVersion string      `json:"semanticVersion"`
+	InformationURI  string      `json:"informationUri"`
+	Rules           []SARIFRule `json:"rules"`
 }
 
 // SARIFRule represents a rule used by the analysis tool
 type SARIFRule struct {
-	ID               string                   `json:"id"`
-	Name             string                   `json:"name"`
-	ShortDescription SARIFMultiformatMessage  `json:"shortDescription"`
-	FullDescription  SARIFMultiformatMessage  `json:"fullDescription"`
-	DefaultConfig    SARIFReportingConfig     `json:"defaultConfiguration"`
-	Properties       map[string]interface{}   `json:"properties,omitempty"`
+	ID               string                  `json:"id"`
+	Name             string                  `json:"name"`
+	ShortDescription SARIFMultiformatMessage `json:"shortDescription"`
+	FullDescription  SARIFMultiformatMessage `json:"fullDescription"`
+	DefaultConfig    SARIFReportingConfig    `json:"defaultConfiguration"`
+	Properties       map[string]interface{}  `json:"properties,omitempty"`
 }
 
 // SARIFMultiformatMessage represents a message in multiple formats
@@ -67,12 +67,12 @@ type SARIFReportingConfig struct {
 
 // SARIFResult represents a single result from the analysis
 type SARIFResult struct {
-	RuleID    string             `json:"ruleId"`
-	RuleIndex int                `json:"ruleIndex"`
-	Level     string             `json:"level"`
-	Message   SARIFMessage       `json:"message"`
-	Locations []SARIFLocation    `json:"locations"`
-	Fixes     []SARIFFix         `json:"fixes,omitempty"`
+	RuleID     string                 `json:"ruleId"`
+	RuleIndex  int                    `json:"ruleIndex"`
+	Level      string                 `json:"level"`
+	Message    SARIFMessage           `json:"message"`
+	Locations  []SARIFLocation        `json:"locations"`
+	Fixes      []SARIFFix             `json:"fixes,omitempty"`
 	Properties map[string]interface{} `json:"properties,omitempty"`
 }
 
@@ -94,17 +94,17 @@ type SARIFPhysicalLocation struct {
 
 // SARIFArtifactLocation represents the location of an artifact
 type SARIFArtifactLocation struct {
-	URI        string `json:"uri"`
-	URIBaseID  string `json:"uriBaseId,omitempty"`
-	Index      int    `json:"index,omitempty"`
+	URI       string `json:"uri"`
+	URIBaseID string `json:"uriBaseId,omitempty"`
+	Index     int    `json:"index,omitempty"`
 }
 
 // SARIFRegion represents a region in a file
 type SARIFRegion struct {
-	StartLine   int    `json:"startLine"`
-	StartColumn int    `json:"startColumn,omitempty"`
-	EndLine     int    `json:"endLine"`
-	EndColumn   int    `json:"endColumn,omitempty"`
+	StartLine   int                   `json:"startLine"`
+	StartColumn int                   `json:"startColumn,omitempty"`
+	EndLine     int                   `json:"endLine"`
+	EndColumn   int                   `json:"endColumn,omitempty"`
 	Snippet     *SARIFArtifactContent `json:"snippet,omitempty"`
 }
 
@@ -115,7 +115,7 @@ type SARIFArtifactContent struct {
 
 // SARIFFix represents a proposed fix for a result
 type SARIFFix struct {
-	Description    SARIFMessage           `json:"description"`
+	Description     SARIFMessage          `json:"description"`
 	ArtifactChanges []SARIFArtifactChange `json:"artifactChanges"`
 }
 
@@ -127,7 +127,7 @@ type SARIFArtifactChange struct {
 
 // SARIFReplacement represents a replacement in a file
 type SARIFReplacement struct {
-	DeletedRegion SARIFRegion          `json:"deletedRegion"`
+	DeletedRegion   SARIFRegion          `json:"deletedRegion"`
 	InsertedContent SARIFArtifactContent `json:"insertedContent"`
 }
 
@@ -139,11 +139,11 @@ type SARIFArtifact struct {
 
 // SARIFTaxonomy represents a taxonomy (e.g., CWE)
 type SARIFTaxonomy struct {
-	Name             string        `json:"name"`
-	GUID             string        `json:"guid"`
-	Organization     string        `json:"organization"`
+	Name             string                  `json:"name"`
+	GUID             string                  `json:"guid"`
+	Organization     string                  `json:"organization"`
 	ShortDescription SARIFMultiformatMessage `json:"shortDescription"`
-	Taxa             []SARIFTaxon  `json:"taxa"`
+	Taxa             []SARIFTaxon            `json:"taxa"`
 }
 
 // SARIFTaxon represents a single taxon in a taxonomy
@@ -157,13 +157,13 @@ type SARIFTaxon struct {
 func GenerateSARIFReport(reportData *ReportData, outputPath string) error {
 	// Create rules from vulnerabilities
 	rules, ruleIndex := createSARIFRules(reportData.Vulnerabilities)
-	
+
 	// Create results
 	results := createSARIFResults(reportData.Vulnerabilities, ruleIndex)
-	
+
 	// Create artifacts
 	artifacts := createSARIFArtifacts(reportData.Vulnerabilities)
-	
+
 	report := &SARIFReport{
 		Version: "2.1.0",
 		Schema:  "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
@@ -182,11 +182,11 @@ func GenerateSARIFReport(reportData *ReportData, outputPath string) error {
 				Artifacts:  artifacts,
 				Taxonomies: createSARIFTaxonomies(),
 				Properties: map[string]interface{}{
-					"repository":   reportData.Repository,
-					"branch":       reportData.Branch,
-					"commit":       reportData.Commit,
-					"scanType":     determineScanType(reportData),
-					"generatedAt":  time.Now().Format(time.RFC3339),
+					"repository":  reportData.Repository,
+					"branch":      reportData.Branch,
+					"commit":      reportData.Commit,
+					"scanType":    determineScanType(reportData),
+					"generatedAt": time.Now().Format(time.RFC3339),
 				},
 			},
 		},
@@ -217,7 +217,7 @@ func GenerateSARIFReport(reportData *ReportData, outputPath string) error {
 func createSARIFRules(vulnerabilities []common.ValidatedResult) ([]SARIFRule, map[string]int) {
 	ruleMap := make(map[string]SARIFRule)
 	ruleIndex := make(map[string]int)
-	
+
 	for _, vuln := range vulnerabilities {
 		ruleID := vuln.CheckID
 		if _, exists := ruleMap[ruleID]; !exists {
@@ -242,7 +242,7 @@ func createSARIFRules(vulnerabilities []common.ValidatedResult) ([]SARIFRule, ma
 			ruleMap[ruleID] = rule
 		}
 	}
-	
+
 	// Convert map to slice and build index
 	var rules []SARIFRule
 	index := 0
@@ -251,13 +251,13 @@ func createSARIFRules(vulnerabilities []common.ValidatedResult) ([]SARIFRule, ma
 		ruleIndex[ruleID] = index
 		index++
 	}
-	
+
 	return rules, ruleIndex
 }
 
 func createSARIFResults(vulnerabilities []common.ValidatedResult, ruleIndex map[string]int) []SARIFResult {
 	var results []SARIFResult
-	
+
 	for _, vuln := range vulnerabilities {
 		result := SARIFResult{
 			RuleID:    vuln.CheckID,
@@ -290,7 +290,7 @@ func createSARIFResults(vulnerabilities []common.ValidatedResult, ruleIndex map[
 				"autoFixed":  false, // Field not available in ValidatedResult
 			},
 		}
-		
+
 		// Add fix if available
 		if vuln.AgentValidation != nil && vuln.AgentValidation.RecommendedAction != "" {
 			result.Fixes = []SARIFFix{
@@ -319,17 +319,17 @@ func createSARIFResults(vulnerabilities []common.ValidatedResult, ruleIndex map[
 				},
 			}
 		}
-		
+
 		results = append(results, result)
 	}
-	
+
 	return results
 }
 
 func createSARIFArtifacts(vulnerabilities []common.ValidatedResult) []SARIFArtifact {
 	artifactMap := make(map[string]bool)
 	var artifacts []SARIFArtifact
-	
+
 	for _, vuln := range vulnerabilities {
 		if !artifactMap[vuln.Path] {
 			artifacts = append(artifacts, SARIFArtifact{
@@ -341,7 +341,7 @@ func createSARIFArtifacts(vulnerabilities []common.ValidatedResult) []SARIFArtif
 			artifactMap[vuln.Path] = true
 		}
 	}
-	
+
 	return artifacts
 }
 
@@ -414,13 +414,13 @@ func getShortDescription(ruleID string) string {
 		"xxe":       "XML External Entity vulnerability",
 		"race":      "Race condition vulnerability",
 	}
-	
+
 	for key, desc := range descriptions {
 		if strings.Contains(strings.ToLower(ruleID), key) {
 			return desc
 		}
 	}
-	
+
 	return "Security vulnerability"
 }
 
@@ -433,11 +433,11 @@ func getFullDescription(vuln common.ValidatedResult) string {
 
 func getMarkdownDescription(vuln common.ValidatedResult) string {
 	var md strings.Builder
-	
+
 	md.WriteString("## Vulnerability Details\n\n")
 	md.WriteString(vuln.Extra.Message)
 	md.WriteString("\n\n")
-	
+
 	if vuln.AgentValidation != nil {
 		// ExploitExample field not available in AgentValidation
 		if false {
@@ -446,7 +446,7 @@ func getMarkdownDescription(vuln common.ValidatedResult) string {
 			md.WriteString("") // Field not available
 			md.WriteString("\n```\n\n")
 		}
-		
+
 		// SecureFix field not available in AgentValidation
 		if false {
 			md.WriteString("### Secure Fix\n\n")
@@ -454,14 +454,14 @@ func getMarkdownDescription(vuln common.ValidatedResult) string {
 			md.WriteString("") // Field not available
 			md.WriteString("\n```\n\n")
 		}
-		
+
 		if vuln.AgentValidation.RecommendedAction != "" {
 			md.WriteString("### Fix Explanation\n\n")
 			md.WriteString(vuln.AgentValidation.RecommendedAction)
 			md.WriteString("\n")
 		}
 	}
-	
+
 	return md.String()
 }
 
@@ -476,13 +476,13 @@ func getCategoryFromRuleID(ruleID string) string {
 		"xxe":       "XML External Entities",
 		"race":      "Race Conditions",
 	}
-	
+
 	for key, cat := range categories {
 		if strings.Contains(strings.ToLower(ruleID), key) {
 			return cat
 		}
 	}
-	
+
 	return "Security"
 }
 
@@ -498,12 +498,12 @@ func getCWEFromRuleID(ruleID string) string {
 		"xxe":      "CWE-611",
 		"race":     "CWE-362",
 	}
-	
+
 	for key, cwe := range cweMap {
 		if strings.Contains(strings.ToLower(ruleID), key) {
 			return cwe
 		}
 	}
-	
+
 	return ""
 }

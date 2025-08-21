@@ -12,13 +12,13 @@ import (
 
 // JSONReport represents the structure of the JSON security report
 type JSONReport struct {
-	Metadata    JSONMetadata                   `json:"metadata"`
-	Summary     JSONSummary                    `json:"summary"`
-	Results     []JSONVulnerability            `json:"vulnerabilities"`
-	Secrets     []JSONSecret                   `json:"secrets,omitempty"`
-	Patterns    []JSONPattern                  `json:"patterns,omitempty"`
-	Metrics     JSONMetrics                    `json:"metrics"`
-	Remediation JSONRemediation                `json:"remediation"`
+	Metadata    JSONMetadata        `json:"metadata"`
+	Summary     JSONSummary         `json:"summary"`
+	Results     []JSONVulnerability `json:"vulnerabilities"`
+	Secrets     []JSONSecret        `json:"secrets,omitempty"`
+	Patterns    []JSONPattern       `json:"patterns,omitempty"`
+	Metrics     JSONMetrics         `json:"metrics"`
+	Remediation JSONRemediation     `json:"remediation"`
 }
 
 // JSONMetadata contains report metadata
@@ -35,43 +35,43 @@ type JSONMetadata struct {
 
 // JSONSummary contains the executive summary
 type JSONSummary struct {
-	TotalVulnerabilities int                    `json:"total_vulnerabilities"`
-	BySeverity           map[string]int         `json:"by_severity"`
-	ByType               map[string]int         `json:"by_type"`
-	FixedCount           int                    `json:"fixed_count"`
-	FalsePositives       int                    `json:"false_positives"`
-	TruePositives        int                    `json:"true_positives"`
-	RiskScore            float64                `json:"risk_score"`
+	TotalVulnerabilities int            `json:"total_vulnerabilities"`
+	BySeverity           map[string]int `json:"by_severity"`
+	ByType               map[string]int `json:"by_type"`
+	FixedCount           int            `json:"fixed_count"`
+	FalsePositives       int            `json:"false_positives"`
+	TruePositives        int            `json:"true_positives"`
+	RiskScore            float64        `json:"risk_score"`
 }
 
 // JSONVulnerability represents a single vulnerability
 type JSONVulnerability struct {
-	ID               string      `json:"id"`
-	Type             string      `json:"type"`
-	Severity         string      `json:"severity"`
-	Confidence       float64     `json:"confidence"`
-	File             string      `json:"file"`
-	StartLine        int         `json:"start_line"`
-	EndLine          int         `json:"end_line"`
-	VulnerableCode   string      `json:"vulnerable_code"`
-	Description      string      `json:"description"`
-	CWE              string      `json:"cwe,omitempty"`
-	OWASP            string      `json:"owasp,omitempty"`
-	ExploitExample   string      `json:"exploit_example,omitempty"`
-	SecureFix        string      `json:"secure_fix,omitempty"`
-	FixExplanation   string      `json:"fix_explanation,omitempty"`
-	ValidationStatus string      `json:"validation_status"`
-	AutoFixed        bool        `json:"auto_fixed"`
+	ID               string  `json:"id"`
+	Type             string  `json:"type"`
+	Severity         string  `json:"severity"`
+	Confidence       float64 `json:"confidence"`
+	File             string  `json:"file"`
+	StartLine        int     `json:"start_line"`
+	EndLine          int     `json:"end_line"`
+	VulnerableCode   string  `json:"vulnerable_code"`
+	Description      string  `json:"description"`
+	CWE              string  `json:"cwe,omitempty"`
+	OWASP            string  `json:"owasp,omitempty"`
+	ExploitExample   string  `json:"exploit_example,omitempty"`
+	SecureFix        string  `json:"secure_fix,omitempty"`
+	FixExplanation   string  `json:"fix_explanation,omitempty"`
+	ValidationStatus string  `json:"validation_status"`
+	AutoFixed        bool    `json:"auto_fixed"`
 }
 
 // JSONSecret represents a detected secret
 type JSONSecret struct {
-	Type      string `json:"type"`
-	File      string `json:"file"`
-	Line      int    `json:"line"`
-	Redacted  string `json:"redacted"`
-	Verified  bool   `json:"verified"`
-	Entropy   float64 `json:"entropy,omitempty"`
+	Type     string  `json:"type"`
+	File     string  `json:"file"`
+	Line     int     `json:"line"`
+	Redacted string  `json:"redacted"`
+	Verified bool    `json:"verified"`
+	Entropy  float64 `json:"entropy,omitempty"`
 }
 
 // JSONPattern represents a vulnerability pattern
@@ -94,11 +94,11 @@ type JSONMetrics struct {
 
 // JSONRemediation contains remediation information
 type JSONRemediation struct {
-	EstimatedEffort string              `json:"estimated_effort"`
-	Priority        []string            `json:"priority_fixes"`
-	AutoFixAvailable int                `json:"auto_fix_available"`
-	ManualFixRequired int               `json:"manual_fix_required"`
-	Resources       []string            `json:"resources,omitempty"`
+	EstimatedEffort   string   `json:"estimated_effort"`
+	Priority          []string `json:"priority_fixes"`
+	AutoFixAvailable  int      `json:"auto_fix_available"`
+	ManualFixRequired int      `json:"manual_fix_required"`
+	Resources         []string `json:"resources,omitempty"`
 }
 
 // GenerateJSONReport generates a JSON format security report
@@ -176,7 +176,7 @@ func calculateRiskScore(data *ReportData) float64 {
 	score -= float64(data.SeverityDistribution["HIGH"]) * 10.0
 	score -= float64(data.SeverityDistribution["MEDIUM"]) * 5.0
 	score -= float64(data.SeverityDistribution["LOW"]) * 2.0
-	
+
 	if score < 0 {
 		score = 0
 	}
@@ -199,12 +199,12 @@ func convertToJSONVulnerabilities(vulns []common.ValidatedResult) []JSONVulnerab
 			ValidationStatus: getValidationStatus(vuln),
 			AutoFixed:        false, // This field doesn't exist in ValidatedResult
 		}
-		
+
 		if vuln.AgentValidation != nil {
 			// These fields are not in AgentValidation, using available fields
 			jsonVuln.FixExplanation = vuln.AgentValidation.RecommendedAction
 		}
-		
+
 		jsonVulns = append(jsonVulns, jsonVuln)
 	}
 	return jsonVulns
@@ -217,9 +217,9 @@ func convertToJSONSecrets(secrets []common.Secret) []JSONSecret {
 			Type:     secret.Type,
 			File:     secret.File,
 			Line:     secret.Line,
-			Redacted: "", // Field not available
-			Verified: false, // Field not available  
-			Entropy:  0.0, // Field not available
+			Redacted: "",    // Field not available
+			Verified: false, // Field not available
+			Entropy:  0.0,   // Field not available
 		})
 	}
 	return jsonSecrets
@@ -275,7 +275,7 @@ func estimateEffort(vulnCount int) string {
 
 func getPriorityFixes(data *ReportData) []string {
 	var priorities []string
-	
+
 	// Add critical vulnerabilities first
 	for _, vuln := range data.Vulnerabilities {
 		if vuln.Extra.Metadata.Impact == "CRITICAL" {
@@ -285,7 +285,7 @@ func getPriorityFixes(data *ReportData) []string {
 			}
 		}
 	}
-	
+
 	return priorities
 }
 

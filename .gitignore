@@ -123,3 +123,6 @@ benchmark-results/
 # Temporary cloned repositories
 temp-*/
 *-temp/
+
+# Test scripts
+test_rulesets.sh

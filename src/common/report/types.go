@@ -7,47 +7,47 @@ import (
 // ReportData contains all the data needed for report generation
 type ReportData struct {
 	// Basic Information
-	ReportID             string
-	Repository           string
-	Branch               string
-	Commit               string
-	ScanConfig           string
-	
+	ReportID   string
+	Repository string
+	Branch     string
+	Commit     string
+	ScanConfig string
+
 	// Scan Configuration
-	OrchestratorMode     bool
-	MatrixBuild          bool
-	MCPMode              bool
-	
+	OrchestratorMode bool
+	MatrixBuild      bool
+	MCPMode          bool
+
 	// Vulnerability Data
 	Vulnerabilities      []common.ValidatedResult
 	TotalVulnerabilities int
 	SeverityDistribution map[string]int
-	
+
 	// Secret Data
-	Secrets              []common.Secret
-	TotalSecrets         int
-	
+	Secrets      []common.Secret
+	TotalSecrets int
+
 	// Pattern Data
-	Patterns             []common.VulnerabilityPattern
-	
+	Patterns []common.VulnerabilityPattern
+
 	// Metrics
 	FilesAnalyzed        int
 	LinesOfCode          int
 	VulnerabilityDensity float64
 	TopVulnerableFiles   []string
 	LanguageBreakdown    map[string]int
-	
+
 	// Validation Metrics
-	TruePositives        int
-	FalsePositives       int
-	FixedCount           int
-	AutoFixableCount     int
-	
+	TruePositives    int
+	FalsePositives   int
+	FixedCount       int
+	AutoFixableCount int
+
 	// Agent Performance (if orchestrator mode)
-	AgentMetrics         []AgentPerformanceMetric
-	
+	AgentMetrics []AgentPerformanceMetric
+
 	// Additional Options
-	Options              *common.Options
+	Options *common.Options
 }
 
 // AgentPerformanceMetric tracks individual agent performance
@@ -57,7 +57,7 @@ type AgentPerformanceMetric struct {
 	ExecutionTime        float64 // seconds
 	FilesAnalyzed        int
 	VulnerabilitiesFound int
-	MemoryUsage          int64   // bytes
+	MemoryUsage          int64 // bytes
 	Status               string
 }
 

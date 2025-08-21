@@ -370,7 +370,7 @@ func (fd *FrameworkDetector) getFrameworkSpecificRulesets(framework string) []st
 		"React":         {"p/react"},
 		"Next.js":       {"p/react", "p/javascript"},
 		"Vue.js":        {"p/vue"},
-		"Angular":       {"p/angular"},
+		"Angular":       {"p/typescript"},
 		"Express":       {"p/javascript"},
 		"Django":        {"p/django"},
 		"Flask":         {"p/flask"},

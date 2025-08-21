@@ -78,13 +78,13 @@ type Options struct {
 	AdditionalRulesets string
 	LanguageThreshold  float64
 	DisableAutoDetect  bool
-	
+
 	// Repository Download Strategy
-	ForceGitClone      bool   // Always use git clone
-	ForceAPIDownload   bool   // Always use API download
-	CloneSizeThreshold int    // Size in MB to trigger clone (default: 50)
-	CloneFileThreshold int    // File count to trigger clone (default: 1000)
-	CloneTimeout       int    // Timeout for git operations in seconds (default: 300)
+	ForceGitClone      bool // Always use git clone
+	ForceAPIDownload   bool // Always use API download
+	CloneSizeThreshold int  // Size in MB to trigger clone (default: 50)
+	CloneFileThreshold int  // File count to trigger clone (default: 1000)
+	CloneTimeout       int  // Timeout for git operations in seconds (default: 300)
 }
 
 // Configuration sub-structures

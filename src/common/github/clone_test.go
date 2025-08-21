@@ -25,17 +25,17 @@ func TestGetGitVersion(t *testing.T) {
 		}
 		return
 	}
-	
+
 	if !strings.Contains(version, "git") {
 		t.Errorf("Unexpected git version format: %s", version)
 	}
-	
+
 	t.Logf("Git version: %s", version)
 }
 
 func TestBuildCloneURL(t *testing.T) {
 	gc := &GitHubClient{}
-	
+
 	testCases := []struct {
 		name     string
 		owner    string
@@ -58,7 +58,7 @@ func TestBuildCloneURL(t *testing.T) {
 			expected: "https://test-token@github.com/owner/repo.git",
 		},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			url := gc.buildCloneURL(tc.owner, tc.repo, tc.token)
@@ -71,17 +71,17 @@ func TestBuildCloneURL(t *testing.T) {
 
 func TestShouldUseGitClone(t *testing.T) {
 	gc := &GitHubClient{}
-	
+
 	testCases := []struct {
-		name         string
-		repoInfo     *common.RepoInfo
-		options      *common.Options
-		shouldClone  bool
+		name        string
+		repoInfo    *common.RepoInfo
+		options     *common.Options
+		shouldClone bool
 	}{
 		{
 			name: "Small repository",
 			repoInfo: &common.RepoInfo{
-				Size:      10240,  // 10 MB
+				Size:      10240, // 10 MB
 				FileCount: 100,
 				Stars:     10,
 			},
@@ -155,7 +155,7 @@ func TestShouldUseGitClone(t *testing.T) {
 			shouldClone: false,
 		},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := gc.ShouldUseGitClone(tc.repoInfo, tc.options)
@@ -172,19 +172,19 @@ func TestCleanupRepository(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp directory: %v", err)
 	}
-	
+
 	// Create some test files
 	testFile := filepath.Join(tempDir, "test.txt")
 	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
-	
+
 	// Test cleanup
 	err = CleanupRepository(tempDir)
 	if err != nil {
 		t.Errorf("Failed to cleanup repository: %v", err)
 	}
-	
+
 	// Check that directory was removed
 	if _, err := os.Stat(tempDir); !os.IsNotExist(err) {
 		t.Error("Directory was not removed after cleanup")
@@ -199,7 +199,7 @@ func TestCleanupRepositorySafety(t *testing.T) {
 		"",
 		"/",
 	}
-	
+
 	for _, path := range nonTempPaths {
 		err := CleanupRepository(path)
 		if err != nil {
@@ -211,11 +211,11 @@ func TestCleanupRepositorySafety(t *testing.T) {
 
 func TestSetupGitEnv(t *testing.T) {
 	gc := &GitHubClient{}
-	
+
 	// Test without token
 	options := &common.Options{}
 	env := gc.setupGitEnv(options)
-	
+
 	hasTerminalPrompt := false
 	for _, e := range env {
 		if e == "GIT_TERMINAL_PROMPT=0" {
@@ -223,17 +223,17 @@ func TestSetupGitEnv(t *testing.T) {
 			break
 		}
 	}
-	
+
 	if !hasTerminalPrompt {
 		t.Error("Expected GIT_TERMINAL_PROMPT=0 in environment")
 	}
-	
+
 	// Test with token
 	options = &common.Options{
 		GitHubToken: "test-token",
 	}
 	env = gc.setupGitEnv(options)
-	
+
 	hasToken := false
 	for _, e := range env {
 		if strings.HasPrefix(e, "GITHUB_TOKEN=") {
@@ -241,7 +241,7 @@ func TestSetupGitEnv(t *testing.T) {
 			break
 		}
 	}
-	
+
 	if !hasToken {
 		t.Error("Expected GITHUB_TOKEN in environment when token is provided")
 	}
