@@ -87,6 +87,16 @@ func (gc *GitHubClient) GetRepositoryInfo(owner, repo string) (*common.RepoInfo,
 		Private:       repository.GetPrivate(),
 		Language:      repository.GetLanguage(),
 		Description:   repository.GetDescription(),
+		Size:          repository.GetSize(), // Size in KB
+		Stars:         repository.GetStargazersCount(),
+		CreatedAt:     repository.GetCreatedAt().Format("2006-01-02"),
+		UpdatedAt:     repository.GetUpdatedAt().Format("2006-01-02"),
+	}
+	
+	// Estimate file count based on size (rough approximation)
+	// Average file size assumption: 10KB
+	if repoInfo.Size > 0 {
+		repoInfo.FileCount = repoInfo.Size / 10
 	}
 
 	return repoInfo, nil

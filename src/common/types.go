@@ -5,6 +5,20 @@ import (
 	"time"
 )
 
+// ScanResults represents the results of a security scan
+type ScanResults struct {
+	Repository           string         `json:"repository"`
+	TotalVulnerabilities int            `json:"total_vulnerabilities"`
+	SeverityDistribution map[string]int `json:"severity_distribution"`
+	FilesAnalyzed        int            `json:"files_analyzed"`
+	LinesOfCode          int            `json:"lines_of_code"`
+	VulnerabilityDensity float64        `json:"vulnerability_density"`
+	TopVulnerableFiles   []string       `json:"top_vulnerable_files"`
+	TruePositives        int            `json:"true_positives"`
+	FalsePositives       int            `json:"false_positives"`
+	FixedCount           int            `json:"fixed_count"`
+}
+
 // CLI Options structure (for backward compatibility)
 type Options struct {
 	// Target specification
@@ -64,6 +78,13 @@ type Options struct {
 	AdditionalRulesets string
 	LanguageThreshold  float64
 	DisableAutoDetect  bool
+	
+	// Repository Download Strategy
+	ForceGitClone      bool   // Always use git clone
+	ForceAPIDownload   bool   // Always use API download
+	CloneSizeThreshold int    // Size in MB to trigger clone (default: 50)
+	CloneFileThreshold int    // File count to trigger clone (default: 1000)
+	CloneTimeout       int    // Timeout for git operations in seconds (default: 300)
 }
 
 // Configuration sub-structures
@@ -353,6 +374,11 @@ type RepoInfo struct {
 	Private       bool
 	Language      string
 	Description   string
+	Size          int    // Repository size in KB
+	Stars         int    // Number of stars
+	FileCount     int    // Approximate number of files
+	CreatedAt     string // Repository creation date
+	UpdatedAt     string // Last update date
 }
 
 // Report generation structures

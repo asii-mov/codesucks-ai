@@ -109,15 +109,32 @@ func scanWithLegacyMode(target string, options *common.Options) (*common.ScanRes
 		return result, nil
 	}
 
+	// Check if git is installed for potential cloning
+	if !github.IsGitInstalled() {
+		fmt.Println("⚠️ Git not installed, will use API download method")
+	}
+
 	// Create temporary directory for repository content
 	tempDir := fmt.Sprintf("%s/temp-%s-%s", options.OutDir, owner, repo)
 	if err := os.MkdirAll(tempDir, 0755); err != nil {
 		return result, fmt.Errorf("failed to create temp directory: %v", err)
 	}
-	defer func() { _ = os.RemoveAll(tempDir) }() // Clean up temporary files
+	
+	// Ensure cleanup happens even on panic
+	var sourcePath string
+	cleanupFunc := func() {
+		if sourcePath != "" {
+			if err := github.CleanupRepository(sourcePath); err != nil {
+				fmt.Printf("⚠️ Warning: %v\n", err)
+			}
+		}
+		// Also clean up the temp directory
+		_ = os.RemoveAll(tempDir)
+	}
+	defer cleanupFunc()
 
-	// Fetch repository content via GitHub API
-	sourcePath, err := githubClient.FetchRepositoryContent(owner, repo, repoInfo.Branch, tempDir)
+	// Use smart fetch to choose between git clone and API download
+	sourcePath, err = githubClient.SmartFetchContent(owner, repo, repoInfo.Branch, tempDir, repoInfo, options)
 	if err != nil {
 		return result, fmt.Errorf("failed to fetch repository content: %v", err)
 	}

@@ -87,6 +87,10 @@ func setConfigDefaults(config *Config) {
 	config.MatrixBuild.Enabled = true           // Default to enabled
 	config.MatrixBuild.AutoDetect = true        // Default to auto-detect
 	config.MatrixBuild.LanguageThreshold = 10.0 // Default 10% threshold
+	
+	// Repository Download Strategy defaults
+	// Note: These aren't in the Config struct, they're in Options
+	// We'll handle them in the runner's option parsing
 }
 
 // validateConfig validates the configuration structure

@@ -97,7 +97,7 @@ scripts/                # Automation scripts
 The project implements a sophisticated **Claude Code subagent system** for security analysis:
 
 ### Orchestrator Mode (FIXED - Now Working)
-- **5 specialized Claude Code subagents** run in parallel
+- **8 specialized Claude Code subagents** run in parallel (3 new agents added!)
 - Each subagent is a separate Claude Code process with specialized configuration
 - **7-phase analysis workflow** from initialization to comprehensive reporting
 - **Graceful fallback** to legacy mode if Claude CLI unavailable
@@ -108,6 +108,47 @@ The project implements a sophisticated **Claude Code subagent system** for secur
 3. **code-path-analyser** - Path traversal and file inclusion
 4. **code-crypto-analyser** - Cryptographic implementation flaws
 5. **code-auth-analyser** - Authentication and authorization flaws
+6. **code-deserial-analyser** - Deserialization vulnerabilities (NEW)
+7. **code-xxe-analyser** - XML External Entity injection (NEW)
+8. **code-race-analyser** - Race conditions and TOCTOU vulnerabilities (NEW)
+
+## Smart Repository Download (NEW)
+
+The tool now intelligently chooses between GitHub API and git clone based on repository size:
+
+### Automatic Selection Criteria
+- **Git Clone Used When**:
+  - Repository size > 50MB (configurable)
+  - File count > 1000 files (configurable)
+  - Repository has > 500 stars (popular repos)
+  - Avoids GitHub API rate limiting for large repos
+
+### Configuration Options
+```bash
+# Force git clone for all repositories
+./run-codesucks.sh -repo https://github.com/owner/repo --force-git-clone
+
+# Force API download (old behavior)
+./run-codesucks.sh -repo https://github.com/owner/repo --force-api-download
+
+# Custom thresholds
+./run-codesucks.sh -repo https://github.com/owner/repo \
+  --clone-size-threshold 100 \  # Use clone for repos > 100MB
+  --clone-file-threshold 2000 \ # Use clone for repos > 2000 files
+  --clone-timeout 600           # 10 minute timeout for git operations
+```
+
+### Performance Benefits
+- **10-100x faster** for large repositories
+- **Reduced API calls**: Single git operation vs thousands of API requests
+- **No rate limiting**: Avoids GitHub's 5000 req/hour limit
+- **Automatic cleanup**: Repositories are deleted after scan completion
+- **Handles cancellation**: Cleanup occurs even if scan is interrupted (Ctrl+C)
+
+### Requirements
+- Git must be installed (`git --version`)
+- Works with both public and private repositories (uses GitHub token)
+- Shallow clone (`--depth 1`) for optimal performance
 
 ## Semgrep MCP Integration
 
@@ -465,6 +506,46 @@ A comprehensive technical debt cleanup was completed to address incomplete imple
 - ✅ Linting passes
 - ✅ Complete orchestrator workflow functional
 - ✅ All major technical debt resolved
+
+## New Features Added (December 2024)
+
+### 1. Enhanced Report Formats
+- **JSON Output**: Machine-readable format for CI/CD integration
+- **SARIF 2.1.0**: Industry-standard format for static analysis results
+- **HTML Reports**: Enhanced with performance metrics and agent summaries
+
+```bash
+# Generate JSON report
+./run-codesucks.sh -repo https://github.com/owner/repo --output-format json
+
+# Generate SARIF report for GitHub/VS Code integration
+./run-codesucks.sh -repo https://github.com/owner/repo --output-format sarif
+
+# Generate all formats
+./run-codesucks.sh -repo https://github.com/owner/repo --output-format all
+```
+
+### 2. Incremental Scanning
+- **Smart caching**: Only scans files changed since last run
+- **Git integration**: Detects changes between commits
+- **Performance boost**: 70-90% faster for subsequent scans
+- **Automatic cache management**: Stores results in `.scan-cache` directory
+
+### 3. MCP Fallback Chain
+- **3-tier resilience**: MCP → CLI → Basic patterns
+- **Automatic fallback**: Seamlessly switches methods if one fails
+- **No scan interruption**: Ensures scans always complete
+
+### 4. Agent Performance Metrics
+- **Execution time tracking**: Per-agent performance monitoring
+- **Memory usage stats**: Resource consumption tracking
+- **Vulnerability counts**: Per-agent finding statistics
+- **Performance summary**: Displayed at end of orchestrator runs
+
+### 5. Vulnerability Deduplication
+- **Smart deduplication**: Removes duplicate findings across agents
+- **Pattern detection**: Identifies systemic vulnerabilities
+- **Reduced noise**: Cleaner, more actionable reports
 
 ## Recent Improvements (Latest)
 

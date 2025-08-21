@@ -12,6 +12,29 @@ import (
 	"github.com/google/uuid"
 )
 
+// GenerateHTMLReport generates an HTML report using the new ReportData structure
+func GenerateHTMLReport(data *ReportData, outputPath string) error {
+	// Convert to common.ReportData for backward compatibility
+	commonData := convertToCommonReportData(data)
+	
+	// Generate HTML using existing function
+	outDir := filepath.Dir(outputPath)
+	generatedPath, err := GenerateHTML(commonData, outDir)
+	if err != nil {
+		return err
+	}
+	
+	// Rename to desired output path if different
+	if generatedPath != outputPath {
+		if err := os.Rename(generatedPath, outputPath); err != nil {
+			// If rename fails, at least we generated the report
+			fmt.Printf("Warning: Could not rename report to %s: %v\n", outputPath, err)
+		}
+	}
+	
+	return nil
+}
+
 // GenerateHTML generates an HTML report from the scan results
 func GenerateHTML(reportData *common.ReportData, outDir string) (string, error) {
 	// Validate input data

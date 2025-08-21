@@ -215,11 +215,18 @@ func (o *SecurityOrchestrator) phase2_AnalyzeCodebaseStructure(repoURL string) (
 		return nil, fmt.Errorf("failed to create vulnerable_code directory: %w", err)
 	}
 
-	// Fetch actual repository content via GitHub API
-	sourcePath, err := o.GitHubClient.FetchRepositoryContent(owner, repo, repoInfo.DefaultBranch, tempDir)
+	// Use smart fetch to choose between git clone and API download
+	sourcePath, err := o.GitHubClient.SmartFetchContent(owner, repo, repoInfo.DefaultBranch, tempDir, repoInfo, o.Options)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch repository content: %w", err)
 	}
+	
+	// Schedule cleanup for orchestrator completion
+	defer func() {
+		if err := github.CleanupRepository(sourcePath); err != nil {
+			fmt.Printf("⚠️ Warning: failed to cleanup repository: %v\n", err)
+		}
+	}()
 
 	// Get repository file metadata (for analysis)
 	files, err := o.GitHubClient.ListRepositoryFiles(owner, repo, repoInfo.DefaultBranch)
@@ -336,6 +343,27 @@ func (o *SecurityOrchestrator) phase4_DecomposeIntoParallelAnalyses() error {
 			FileScope:      o.filterFilesByPatterns([]string{"*.py", "*.js", "*.java", "*.go", "*.php"}),
 			AssignedAgent:  common.AgentTypeAuth,
 		},
+		{
+			AnalysisID:     "analysis_deserial",
+			Focus:          "Deserialization vulnerabilities",
+			TargetPatterns: []string{"pickle", "unserialize", "yaml.load", "JSON.parse", "readObject"},
+			FileScope:      o.filterFilesByPatterns([]string{"*.py", "*.js", "*.java", "*.php", "*.rb", "*.cs"}),
+			AssignedAgent:  common.AgentTypeDeserial,
+		},
+		{
+			AnalysisID:     "analysis_xxe",
+			Focus:          "XML External Entity injection",
+			TargetPatterns: []string{"xml", "parse", "SAXParser", "XMLReader", "DocumentBuilder"},
+			FileScope:      o.filterFilesByPatterns([]string{"*.java", "*.cs", "*.py", "*.php", "*.xml"}),
+			AssignedAgent:  common.AgentTypeXXE,
+		},
+		{
+			AnalysisID:     "analysis_race",
+			Focus:          "Race conditions and TOCTOU vulnerabilities",
+			TargetPatterns: []string{"thread", "async", "concurrent", "mutex", "lock", "atomic"},
+			FileScope:      o.filterFilesByPatterns([]string{"*.go", "*.java", "*.c", "*.cpp", "*.rs", "*.py"}),
+			AssignedAgent:  common.AgentTypeRace,
+		},
 	}
 
 	// Create agent assignments
@@ -428,8 +456,18 @@ func (o *SecurityOrchestrator) phase5_ExecuteParallelCodeAnalysis(repoContext *c
 				return
 			}
 
-			fmt.Printf("✅ Agent %s completed: %d vulnerabilities found\n",
-				agentInfo.AgentID, len(results.Vulnerabilities))
+			// Record agent completion metrics
+			endTime := time.Now()
+			metrics := &AgentMetrics{
+				AgentID:       agentInfo.AgentID,
+				AgentType:     agentInfo.AgentType,
+				EndTime:       endTime,
+				VulnsFound:    len(results.Vulnerabilities),
+				Status:        "completed",
+			}
+
+			fmt.Printf("✅ Agent %s completed: %d vulnerabilities found (execution time: %v)\n",
+				agentInfo.AgentID, metrics.VulnsFound, metrics.ExecutionTime)
 
 			agentResults <- results
 
@@ -642,8 +680,55 @@ func (o *SecurityOrchestrator) filterFilesByPatterns(patterns []string) []string
 	return []string{}
 }
 
+// AgentMetrics tracks performance metrics for an agent
+type AgentMetrics struct {
+	AgentID         string        `json:"agent_id"`
+	AgentType       string        `json:"agent_type"`
+	StartTime       time.Time     `json:"start_time"`
+	EndTime         time.Time     `json:"end_time"`
+	ExecutionTime   time.Duration `json:"execution_time"`
+	MemoryUsageMB   int64         `json:"memory_usage_mb"`
+	FilesAnalyzed   int           `json:"files_analyzed"`
+	VulnsFound      int           `json:"vulnerabilities_found"`
+	Status          string        `json:"status"`
+	ErrorCount      int           `json:"error_count"`
+}
+
 func (o *SecurityOrchestrator) monitorAgentProgress(agentID string) error {
+	// Track agent metrics
+	metrics := &AgentMetrics{
+		AgentID:   agentID,
+		StartTime: time.Now(),
+		Status:    "running",
+	}
+	
+	// Store metrics in state (would need to add AgentMetrics field to state)
+	// For now, just log the progress
+	fmt.Printf("📊 Monitoring agent %s - started at %s\n", agentID, metrics.StartTime.Format("15:04:05"))
+	
 	return nil
+}
+
+// displayAgentPerformanceSummary shows performance metrics for all agents
+func (o *SecurityOrchestrator) displayAgentPerformanceSummary() {
+	fmt.Println("\n📊 Agent Performance Summary:")
+	fmt.Println("═══════════════════════════════════════════════════════")
+	
+	totalVulns := 0
+	totalTime := time.Duration(0)
+	
+	for _, agent := range o.State.AnalysisAgents {
+		fmt.Printf("Agent: %s (%s)\n", agent.AgentID, agent.AgentType)
+		fmt.Printf("  ├─ Status: %s\n", agent.Status)
+		fmt.Printf("  ├─ Files Analyzed: %d\n", agent.FilesAnalyzed)
+		fmt.Printf("  └─ Vulnerabilities Found: %d\n", agent.VulnerabilitiesFound)
+		
+		totalVulns += agent.VulnerabilitiesFound
+	}
+	
+	fmt.Printf("\nTotal Vulnerabilities: %d\n", totalVulns)
+	fmt.Printf("Total Execution Time: %v\n", totalTime)
+	fmt.Println("═══════════════════════════════════════════════════════")
 }
 
 func (o *SecurityOrchestrator) phase6_SynthesizeAndValidateFindings() error {
@@ -883,6 +968,9 @@ func (o *SecurityOrchestrator) findMostVulnerableComponents(results []common.Val
 
 func (o *SecurityOrchestrator) phase7_GenerateCodeSecurityReport() (string, error) {
 	fmt.Println("🔄 Phase 7: Generate Code Security Report")
+	
+	// Display agent performance summary
+	o.displayAgentPerformanceSummary()
 
 	// Convert orchestrator findings to ValidatedResults format
 	validatedResults := o.convertToValidatedResults()
@@ -981,21 +1069,42 @@ func (o *SecurityOrchestrator) extractContentFromClaudeResponse(data []byte) str
 		Type     string `json:"type"`
 		Content  string `json:"content,omitempty"`
 		Result   string `json:"result,omitempty"`
+		Output   string `json:"output,omitempty"`
+		Response string `json:"response,omitempty"`
+		Data     string `json:"data,omitempty"`
 		Messages []struct {
 			Content []struct {
 				Text string `json:"text"`
 			} `json:"content"`
 		} `json:"messages,omitempty"`
+		Completion string `json:"completion,omitempty"`
 	}
 
 	if err := json.Unmarshal(data, &claudeResponse); err == nil {
-		// Extract actual content from Claude CLI response
+		// Extract actual content from Claude CLI response (try multiple fields)
 		if claudeResponse.Result != "" {
 			return claudeResponse.Result
+		} else if claudeResponse.Output != "" {
+			return claudeResponse.Output
+		} else if claudeResponse.Response != "" {
+			return claudeResponse.Response
+		} else if claudeResponse.Data != "" {
+			return claudeResponse.Data
 		} else if claudeResponse.Content != "" {
 			return claudeResponse.Content
+		} else if claudeResponse.Completion != "" {
+			return claudeResponse.Completion
 		} else if len(claudeResponse.Messages) > 0 && len(claudeResponse.Messages[0].Content) > 0 {
 			return claudeResponse.Messages[0].Content[0].Text
+		}
+	}
+
+	// Try to extract from markdown code blocks
+	content := string(data)
+	if start := strings.Index(content, "```json"); start >= 0 {
+		start += 7 // Skip "```json"
+		if end := strings.Index(content[start:], "```"); end >= 0 {
+			return strings.TrimSpace(content[start : start+end])
 		}
 	}
 
@@ -1005,6 +1114,9 @@ func (o *SecurityOrchestrator) extractContentFromClaudeResponse(data []byte) str
 
 // parseAgentVulnerabilities attempts to parse vulnerabilities from agent content
 func (o *SecurityOrchestrator) parseAgentVulnerabilities(content string, agent common.AnalysisAgent) common.AgentResults {
+	// Clean up content first
+	content = strings.TrimSpace(content)
+	
 	// Try to extract JSON from the content (Claude often puts JSON in code blocks)
 	jsonStart := strings.Index(content, "{")
 	jsonEnd := strings.LastIndex(content, "}")
@@ -1012,6 +1124,7 @@ func (o *SecurityOrchestrator) parseAgentVulnerabilities(content string, agent c
 	if jsonStart >= 0 && jsonEnd > jsonStart {
 		jsonContent := content[jsonStart : jsonEnd+1]
 
+		// Try primary format
 		var results common.AgentResults
 		if err := json.Unmarshal([]byte(jsonContent), &results); err == nil {
 			return results
@@ -1023,14 +1136,65 @@ func (o *SecurityOrchestrator) parseAgentVulnerabilities(content string, agent c
 			AnalysisType    string                   `json:"analysis_type"`
 			FilesAnalyzed   []string                 `json:"files_analyzed"`
 			Vulnerabilities []common.SecurityFinding `json:"vulnerabilities"`
+			Findings        []common.SecurityFinding `json:"findings"`
 		}
 
 		if err := json.Unmarshal([]byte(jsonContent), &altResults); err == nil {
+			vulns := altResults.Vulnerabilities
+			if len(vulns) == 0 && len(altResults.Findings) > 0 {
+				vulns = altResults.Findings
+			}
 			return common.AgentResults{
 				AgentID:         altResults.AgentID,
 				Type:            altResults.AnalysisType,
 				Status:          "completed",
-				Vulnerabilities: altResults.Vulnerabilities,
+				Vulnerabilities: vulns,
+			}
+		}
+
+		// Try format with results wrapper
+		var wrappedResults struct {
+			Results struct {
+				AgentID         string                   `json:"agent_id"`
+				Vulnerabilities []common.SecurityFinding `json:"vulnerabilities"`
+				Findings        []common.SecurityFinding `json:"findings"`
+			} `json:"results"`
+		}
+
+		if err := json.Unmarshal([]byte(jsonContent), &wrappedResults); err == nil {
+			vulns := wrappedResults.Results.Vulnerabilities
+			if len(vulns) == 0 && len(wrappedResults.Results.Findings) > 0 {
+				vulns = wrappedResults.Results.Findings
+			}
+			return common.AgentResults{
+				AgentID:         wrappedResults.Results.AgentID,
+				Type:            agent.AgentType,
+				Status:          "completed",
+				Vulnerabilities: vulns,
+			}
+		}
+
+		// Try array format
+		var arrayResults []common.SecurityFinding
+		if err := json.Unmarshal([]byte(jsonContent), &arrayResults); err == nil {
+			return common.AgentResults{
+				AgentID:         agent.AgentID,
+				Type:            agent.AgentType,
+				Status:          "completed",
+				Vulnerabilities: arrayResults,
+			}
+		}
+	}
+
+	// Try to parse as JSON array directly
+	if strings.HasPrefix(content, "[") && strings.HasSuffix(content, "]") {
+		var arrayResults []common.SecurityFinding
+		if err := json.Unmarshal([]byte(content), &arrayResults); err == nil {
+			return common.AgentResults{
+				AgentID:         agent.AgentID,
+				Type:            agent.AgentType,
+				Status:          "completed",
+				Vulnerabilities: arrayResults,
 			}
 		}
 	}
