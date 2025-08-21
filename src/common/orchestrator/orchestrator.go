@@ -227,9 +227,10 @@ func (o *SecurityOrchestrator) phase2_AnalyzeCodebaseStructure(repoURL string) (
 		return nil, fmt.Errorf("failed to get repository contents: %w", err)
 	}
 
-	// Store source path in orchestrator state for agents
+	// Store source path and default branch in orchestrator state for agents
 	o.mu.Lock()
 	o.State.SourcePath = sourcePath
+	o.State.DefaultBranch = repoInfo.DefaultBranch
 	o.State.FilesDownloaded = len(files)
 	o.mu.Unlock()
 
@@ -887,7 +888,7 @@ func (o *SecurityOrchestrator) phase7_GenerateCodeSecurityReport() (string, erro
 	validatedResults := o.convertToValidatedResults()
 
 	// Use the existing report conversion function to create proper ReportData
-	reportData := report.ConvertValidatedResultsToReport(o.Options.Repo, validatedResults, nil)
+	reportData := report.ConvertValidatedResultsToReport(o.Options.Repo, o.State.DefaultBranch, validatedResults, nil, o.State.SourcePath)
 
 	// Generate HTML report
 	htmlReportPath, err := report.GenerateHTML(reportData, o.SessionDir)

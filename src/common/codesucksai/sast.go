@@ -153,7 +153,6 @@ func buildSemgrepArgsForStdout(sourcePath, configPath string) []string {
 	return args
 }
 
-
 // readConfigFile reads a configuration file and parses the FLAGS line
 func readConfigFile(configPath string) []string {
 	// Check if file exists

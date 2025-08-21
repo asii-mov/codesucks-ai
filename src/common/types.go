@@ -358,6 +358,7 @@ type RepoInfo struct {
 // Report generation structures
 type ReportData struct {
 	Target                     string
+	DefaultBranch              string
 	VulnerabilityStats         map[string]int
 	VulnerabilityStatsOrdering []string
 	SeverityStats              map[string]int
@@ -419,6 +420,7 @@ type OrchestratorState struct {
 	CreatedAt             time.Time               `json:"created_at"`
 	CurrentPhase          string                  `json:"current_phase"`
 	SourcePath            string                  `json:"source_path"`      // Path to downloaded source code
+	DefaultBranch         string                  `json:"default_branch"`   // Default branch of the repository
 	FilesDownloaded       int                     `json:"files_downloaded"` // Number of files fetched
 	CodebaseContext       CodebaseContext         `json:"codebase_context"`
 	CodePatterns          CodePatterns            `json:"code_patterns"`

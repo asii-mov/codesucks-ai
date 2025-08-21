@@ -1,6 +1,7 @@
 package report
 
 import (
+	"bufio"
 	"fmt"
 	"html/template"
 	"os"
@@ -64,8 +65,40 @@ func GenerateHTML(reportData *common.ReportData, outDir string) (string, error) 
 	return outPath, nil
 }
 
+// extractCodeSnippet reads a file and extracts lines around the specified range
+func extractCodeSnippet(filePath string, startLine, endLine int) string {
+	// Try to open the file
+	file, err := os.Open(filePath)
+	if err != nil {
+		// If we can't open the file, return empty string
+		return ""
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	lineNum := 1
+	var lines []string
+	
+	// Read the file line by line
+	for scanner.Scan() {
+		if lineNum >= startLine && lineNum <= endLine {
+			lines = append(lines, scanner.Text())
+		}
+		if lineNum > endLine {
+			break
+		}
+		lineNum++
+	}
+	
+	// Join the lines
+	if len(lines) > 0 {
+		return strings.Join(lines, "\n")
+	}
+	return ""
+}
+
 // ConvertSemgrepToReport converts Semgrep results to report format
-func ConvertSemgrepToReport(target string, semgrepJson *common.SemgrepJson) *common.ReportData {
+func ConvertSemgrepToReport(target string, defaultBranch string, semgrepJson *common.SemgrepJson, sourcePath string) *common.ReportData {
 	var findings []common.SemgrepFinding
 
 	// Convert Semgrep results to report findings
@@ -77,14 +110,26 @@ func ConvertSemgrepToReport(target string, semgrepJson *common.SemgrepJson) *com
 			continue
 		}
 
+		// Extract code snippet - fallback to reading from file if Semgrep returns "requires login"
+		codeSnippet := result.Extra.Lines
+		if codeSnippet == "requires login" || codeSnippet == "" {
+			// Try to extract code from the actual file
+			if sourcePath != "" {
+				fullPath := filepath.Join(sourcePath, result.Path)
+				if extracted := extractCodeSnippet(fullPath, result.Start.Line, result.End.Line); extracted != "" {
+					codeSnippet = extracted
+				}
+			}
+		}
+
 		finding := common.SemgrepFinding{
 			VulnerabilityTitle: cleanVulnerabilityTitle(result.CheckID),
 			Severity:           getSeverityFromResult(result),
 			Description:        result.Extra.Message,
-			Code:               result.Extra.Lines,
+			Code:               codeSnippet,
 			StartLine:          result.Start.Line,
 			StopLine:           result.End.Line,
-			GithubLink:         generateGitHubLink(target, result.Path, result.Start.Line, result.End.Line),
+			GithubLink:         generateGitHubLink(target, result.Path, result.Start.Line, result.End.Line, defaultBranch),
 		}
 		findings = append(findings, finding)
 	}
@@ -97,6 +142,7 @@ func ConvertSemgrepToReport(target string, semgrepJson *common.SemgrepJson) *com
 
 	return &common.ReportData{
 		Target:                     target,
+		DefaultBranch:              defaultBranch,
 		VulnerabilityStats:         vulnStats,
 		VulnerabilityStatsOrdering: vulnOrdering,
 		SeverityStats:              severityStats,
@@ -106,7 +152,7 @@ func ConvertSemgrepToReport(target string, semgrepJson *common.SemgrepJson) *com
 }
 
 // ConvertValidatedResultsToReport converts validated results to report format
-func ConvertValidatedResultsToReport(target string, validatedResults []common.ValidatedResult, matrixConfig *common.MatrixConfig) *common.ReportData {
+func ConvertValidatedResultsToReport(target string, defaultBranch string, validatedResults []common.ValidatedResult, matrixConfig *common.MatrixConfig, sourcePath string) *common.ReportData {
 	var findings []common.SemgrepFinding
 
 	// Convert validated results to report findings
@@ -119,14 +165,26 @@ func ConvertValidatedResultsToReport(target string, validatedResults []common.Va
 			continue
 		}
 
+		// Extract code snippet - fallback to reading from file if Semgrep returns "requires login"
+		codeSnippet := result.Extra.Lines
+		if codeSnippet == "requires login" || codeSnippet == "" {
+			// Try to extract code from the actual file
+			if sourcePath != "" {
+				fullPath := filepath.Join(sourcePath, result.Path)
+				if extracted := extractCodeSnippet(fullPath, result.Start.Line, result.End.Line); extracted != "" {
+					codeSnippet = extracted
+				}
+			}
+		}
+
 		finding := common.SemgrepFinding{
 			VulnerabilityTitle: cleanVulnerabilityTitle(result.CheckID),
 			Severity:           getSeverityFromResult(result),
 			Description:        result.Extra.Message,
-			Code:               result.Extra.Lines,
+			Code:               codeSnippet,
 			StartLine:          result.Start.Line,
 			StopLine:           result.End.Line,
-			GithubLink:         generateGitHubLink(target, result.Path, result.Start.Line, result.End.Line),
+			GithubLink:         generateGitHubLink(target, result.Path, result.Start.Line, result.End.Line, defaultBranch),
 			AgentValidation:    validatedResult.AgentValidation,
 			IsFiltered:         validatedResult.IsFiltered,
 		}
@@ -141,6 +199,7 @@ func ConvertValidatedResultsToReport(target string, validatedResults []common.Va
 
 	return &common.ReportData{
 		Target:                     target,
+		DefaultBranch:              defaultBranch,
 		VulnerabilityStats:         vulnStats,
 		VulnerabilityStatsOrdering: vulnOrdering,
 		SeverityStats:              severityStats,
@@ -151,7 +210,7 @@ func ConvertValidatedResultsToReport(target string, validatedResults []common.Va
 }
 
 // ConvertTruffleHogToReport converts TruffleHog results to report format
-func ConvertTruffleHogToReport(target string, trufflehogJson *common.TruffleHogJson) *common.ReportData {
+func ConvertTruffleHogToReport(target string, defaultBranch string, trufflehogJson *common.TruffleHogJson) *common.ReportData {
 	var secretFindings []common.TruffleHogFinding
 	secretStats := make(map[string]int)
 	var secretStatsOrdering []string
@@ -184,7 +243,7 @@ func ConvertTruffleHogToReport(target string, trufflehogJson *common.TruffleHogJ
 			Description:   generateSecretDescription(result.DetectorName, result.Verified),
 			RedactedValue: result.Redacted,
 			StartLine:     lineNum,
-			GithubLink:    generateGitHubLink(target, filePath, lineNum, lineNum),
+			GithubLink:    generateGitHubLink(target, filePath, lineNum, lineNum, defaultBranch),
 			File:          filePath,
 		}
 		secretFindings = append(secretFindings, finding)
@@ -203,6 +262,7 @@ func ConvertTruffleHogToReport(target string, trufflehogJson *common.TruffleHogJ
 
 	return &common.ReportData{
 		Target:              target,
+		DefaultBranch:       defaultBranch,
 		SecretStats:         secretStats,
 		SecretStatsOrdering: secretStatsOrdering,
 		SecretFindings:      secretFindings,
@@ -210,12 +270,12 @@ func ConvertTruffleHogToReport(target string, trufflehogJson *common.TruffleHogJ
 }
 
 // AddTruffleHogToReport adds TruffleHog results to existing report data
-func AddTruffleHogToReport(reportData *common.ReportData, target string, trufflehogJson *common.TruffleHogJson) {
+func AddTruffleHogToReport(reportData *common.ReportData, target string, defaultBranch string, trufflehogJson *common.TruffleHogJson) {
 	if reportData == nil {
 		return
 	}
 
-	truffleHogData := ConvertTruffleHogToReport(target, trufflehogJson)
+	truffleHogData := ConvertTruffleHogToReport(target, defaultBranch, trufflehogJson)
 
 	// Merge the TruffleHog data into the existing report
 	reportData.SecretStats = truffleHogData.SecretStats
@@ -268,7 +328,7 @@ func getSeverityFromResult(result common.Result) string {
 }
 
 // generateGitHubLink creates a GitHub link to the vulnerable code
-func generateGitHubLink(target, filePath string, startLine, endLine int) string {
+func generateGitHubLink(target, filePath string, startLine, endLine int, defaultBranch string) string {
 	// Clean the target URL
 	baseURL := strings.TrimSuffix(target, "/")
 	baseURL = strings.TrimSuffix(baseURL, ".git")
@@ -290,8 +350,12 @@ func generateGitHubLink(target, filePath string, startLine, endLine int) string 
 	}
 
 	// Create GitHub blob link
-	if startLine == endLine {
-		return fmt.Sprintf("%s/blob/main/%s#L%d", baseURL, cleanPath, startLine)
+	// Use the provided default branch, or fall back to "main" if not provided
+	if defaultBranch == "" {
+		defaultBranch = "main"
 	}
-	return fmt.Sprintf("%s/blob/main/%s#L%d-L%d", baseURL, cleanPath, startLine, endLine)
+	if startLine == endLine {
+		return fmt.Sprintf("%s/blob/%s/%s#L%d", baseURL, defaultBranch, cleanPath, startLine)
+	}
+	return fmt.Sprintf("%s/blob/%s/%s#L%d-L%d", baseURL, defaultBranch, cleanPath, startLine, endLine)
 }

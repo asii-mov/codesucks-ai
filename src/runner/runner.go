@@ -219,11 +219,12 @@ func scanWithLegacyMode(target string, options *common.Options) (*common.ScanRes
 	// Generate HTML report combining Semgrep and TruffleHog results
 	var reportData *common.ReportData
 	if !options.NoSemgrep {
-		reportData = report.ConvertValidatedResultsToReport(target, filteredResults, matrixConfig)
+		reportData = report.ConvertValidatedResultsToReport(target, repoInfo.DefaultBranch, filteredResults, matrixConfig, sourcePath)
 	} else {
 		// Create empty report data if only TruffleHog is running
 		reportData = &common.ReportData{
 			Target:                     target,
+			DefaultBranch:              repoInfo.DefaultBranch,
 			VulnerabilityStats:         make(map[string]int),
 			VulnerabilityStatsOrdering: []string{},
 			SeverityStats:              make(map[string]int),
@@ -234,7 +235,7 @@ func scanWithLegacyMode(target string, options *common.Options) (*common.ScanRes
 	}
 
 	if !options.NoTruffleHog {
-		report.AddTruffleHogToReport(reportData, target, trufflehogJson)
+		report.AddTruffleHogToReport(reportData, target, repoInfo.DefaultBranch, trufflehogJson)
 	}
 	reportPath, err := report.GenerateHTML(reportData, options.OutDir)
 	if err != nil {
