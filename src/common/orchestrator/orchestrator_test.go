@@ -1,13 +1,43 @@
 package orchestrator
 
 import (
+	"os"
 	"testing"
 	"time"
 
 	"github.com/asii-mov/codesucks-ai/common"
 )
 
+// setupTestEnvironment sets up a clean test environment with fake API key
+func setupTestEnvironment(t *testing.T) func() {
+	// Save original environment
+	originalKey := os.Getenv("ANTHROPIC_API_KEY")
+	
+	// Set fake API key for testing
+	os.Setenv("ANTHROPIC_API_KEY", "sk-ant-test-fake-key-for-unit-tests-only")
+	
+	// Return cleanup function
+	return func() {
+		if originalKey != "" {
+			os.Setenv("ANTHROPIC_API_KEY", originalKey)
+		} else {
+			os.Unsetenv("ANTHROPIC_API_KEY")
+		}
+	}
+}
+
 func TestNewSecurityOrchestrator(t *testing.T) {
+	// Set required environment variable for test
+	originalKey := os.Getenv("ANTHROPIC_API_KEY")
+	os.Setenv("ANTHROPIC_API_KEY", "test-key")
+	defer func() {
+		if originalKey != "" {
+			os.Setenv("ANTHROPIC_API_KEY", originalKey)
+		} else {
+			os.Unsetenv("ANTHROPIC_API_KEY")
+		}
+	}()
+
 	options := &common.Options{
 		Repo:       "https://github.com/test/repo",
 		OutDir:     "/tmp/test",
@@ -34,6 +64,17 @@ func TestNewSecurityOrchestrator(t *testing.T) {
 }
 
 func TestPhase4_DecomposeIntoParallelAnalyses(t *testing.T) {
+	// Set required environment variable for test
+	originalKey := os.Getenv("ANTHROPIC_API_KEY")
+	os.Setenv("ANTHROPIC_API_KEY", "test-key")
+	defer func() {
+		if originalKey != "" {
+			os.Setenv("ANTHROPIC_API_KEY", originalKey)
+		} else {
+			os.Unsetenv("ANTHROPIC_API_KEY")
+		}
+	}()
+
 	options := &common.Options{
 		Repo:       "https://github.com/test/repo",
 		OutDir:     "/tmp/test",
