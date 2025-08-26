@@ -7,11 +7,11 @@ AI-powered security analysis tool combining static analysis with intelligent vul
 
 ## Features
 
-- **Three-layer analysis**: SAST (Semgrep via MCP), Secret Detection (TruffleHog), AI Deep Analysis (Claude)
-- **AI Orchestrator**: 5 specialized Claude Code subagents for parallel security analysis
+- **Three-layer analysis**: SAST (Semgrep via MCP), Secret Detection (TruffleHog), AI Analysis (Claude)
+- **AI Orchestrator**: 5 Claude Code subagents for parallel security analysis
 - **Matrix Build System**: Intelligent language/framework detection with targeted security rulesets
 - **Automated fixes**: Generate and apply security patches via GitHub PRs
-- **Low false positives**: AI-powered context analysis reduces noise by 15%
+- **Low false positives**: AI-powered context analysis reduces false positives by 15%
 - **Multi-language support**: Java, Python, JavaScript, Go, Ruby, PHP, C/C++, C#
 - **HTML reports**: Comprehensive reports with executive summaries
 
