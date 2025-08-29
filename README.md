@@ -3,6 +3,7 @@
 AI-powered security analysis tool combining static analysis with intelligent vulnerability detection and automated remediation.
 
 <img width="1196" height="560" alt="image" src="https://github.com/user-attachments/assets/9e2a280f-aa76-434b-8067-cc7a235f8947" />
+<img width="897" height="871" alt="image" src="https://github.com/user-attachments/assets/2a68284a-0824-42c2-bef6-f79d65aa2ff9" />
 
 
 ## Features
