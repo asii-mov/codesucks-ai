@@ -25,10 +25,6 @@ import (
 func Run(ctx context.Context, cfg Config, deps Deps) (RunReport, error) {
 	rep := RunReport{RunID: newRunID(), Repo: cfg.RepoURL, StartedAt: time.Now()}
 	red := scan.NewRedactor()
-	defer func() {
-		rep.EndedAt = time.Now()
-		rep.estimateCost()
-	}()
 
 	// Clone.
 	workdir := cfg.Workdir
@@ -129,6 +125,8 @@ func Run(ctx context.Context, cfg Config, deps Deps) (RunReport, error) {
 		}
 	}
 
+	rep.EndedAt = time.Now()
+	rep.estimateCost()
 	if err := WriteReports(cfg.OutDir, rep, red); err != nil {
 		return rep, fmt.Errorf("write reports: %w", err)
 	}

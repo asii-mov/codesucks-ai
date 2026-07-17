@@ -14,7 +14,7 @@ import (
 // Hardcoded operational constants — deliberately not flags, to keep the tool's
 // surface small.
 const (
-	TriageModel        = "claude-haiku-4-5"
+	TriageModel        = "claude-opus-4-8"
 	DefaultPatchModel  = "claude-opus-4-8"
 	TriageConcurrency  = 4
 	TriageConfidence   = 0.7
