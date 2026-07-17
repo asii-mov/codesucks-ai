@@ -1,0 +1,4 @@
+{"level":"info","msg":"running source","logger":"trufflehog"}
+{"DetectorName":"AWS","Verified":true,"Raw":"AKIAIOSFODNN7EXAMPLE","Redacted":"AKIA****************","SourceMetadata":{"Data":{"Filesystem":{"file":"config/secrets.js","line":3}}}}
+{"level":"info","msg":"scan complete","logger":"trufflehog"}
+{"DetectorName":"GenericApiKey","Verified":false,"Raw":"sk_live_unverified_example_key_1234567890","Redacted":"","SourceMetadata":{"Data":{"Filesystem":{"file":"app/config.js","line":8}}}}

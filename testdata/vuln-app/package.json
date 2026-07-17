@@ -1,0 +1,9 @@
+{
+  "name": "vuln-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Intentionally vulnerable fixture app for codesucks-ai tests. All credentials in this app are fake.",
+  "scripts": {
+    "test": "node test.js"
+  }
+}

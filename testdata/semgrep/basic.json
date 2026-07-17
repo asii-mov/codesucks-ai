@@ -1,0 +1,53 @@
+{
+  "results": [
+    {
+      "check_id": "javascript.lang.security.detect-eval-with-expression",
+      "path": "app/routes/index.js",
+      "start": { "line": 12, "col": 3 },
+      "end": { "line": 12, "col": 28 },
+      "extra": {
+        "message": "Detected eval with a dynamic expression, which can lead to code injection.",
+        "lines": "  eval(req.query.x)",
+        "severity": "ERROR",
+        "metadata": { "cwe": "CWE-95: Improper Neutralization of Directives", "impact": "HIGH", "confidence": "HIGH" }
+      }
+    },
+    {
+      "check_id": "javascript.express.security.audit.xss",
+      "path": "app/views/profile.js",
+      "start": { "line": 40, "col": 1 },
+      "end": { "line": 40, "col": 20 },
+      "extra": {
+        "message": "Possible reflected XSS.",
+        "lines": "res.send(req.query.name)",
+        "severity": "WARNING",
+        "fingerprint": "abc123preexisting",
+        "metadata": { "cwe": ["CWE-79"], "impact": "MEDIUM", "confidence": "LOW" }
+      }
+    },
+    {
+      "check_id": "generic.style.info-rule",
+      "path": "app/routes/index.js",
+      "start": { "line": 5, "col": 1 },
+      "end": { "line": 5, "col": 10 },
+      "extra": {
+        "message": "Informational note.",
+        "lines": "// a comment",
+        "severity": "INFO",
+        "metadata": {}
+      }
+    },
+    {
+      "check_id": "javascript.lang.security.audit.vendored",
+      "path": "node_modules/left-pad/index.js",
+      "start": { "line": 1, "col": 1 },
+      "end": { "line": 1, "col": 5 },
+      "extra": {
+        "message": "In a dependency; should be filtered out.",
+        "lines": "module.exports = 1",
+        "severity": "ERROR",
+        "metadata": { "impact": "LOW", "confidence": "LOW" }
+      }
+    }
+  ]
+}
