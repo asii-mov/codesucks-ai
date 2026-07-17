@@ -34,8 +34,11 @@ func TestParseSemgrepJSON(t *testing.T) {
 	}
 
 	xss := findings[1]
-	if xss.Fingerprint != "abc123preexisting" {
-		t.Errorf("should prefer semgrep's own fingerprint, got %s", xss.Fingerprint)
+	// We always compute our own content-based fingerprint (semgrep's own field
+	// is unreliable when logged out), so it must match the computed value.
+	wantFP := Fingerprint(ToolSemgrep, xss.RuleID, xss.File, "res.send(req.query.name)")
+	if xss.Fingerprint != wantFP {
+		t.Errorf("expected computed fingerprint %s, got %s", wantFP, xss.Fingerprint)
 	}
 	if len(xss.CWE) != 1 || xss.CWE[0] != "CWE-79" {
 		t.Errorf("expected CWE-79 from array, got %v", xss.CWE)

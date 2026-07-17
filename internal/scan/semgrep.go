@@ -26,11 +26,10 @@ type semgrepResult struct {
 	Start   semgrepPos `json:"start"`
 	End     semgrepPos `json:"end"`
 	Extra   struct {
-		Message     string `json:"message"`
-		Lines       string `json:"lines"`
-		Severity    string `json:"severity"`
-		Fingerprint string `json:"fingerprint"`
-		Metadata    struct {
+		Message  string `json:"message"`
+		Lines    string `json:"lines"`
+		Severity string `json:"severity"`
+		Metadata struct {
 			CWE        json.RawMessage `json:"cwe"`
 			Impact     string          `json:"impact"`
 			Confidence string          `json:"confidence"`
@@ -96,10 +95,11 @@ func parseSemgrepJSON(data []byte) ([]Finding, error) {
 	findings := make([]Finding, 0, len(out.Results))
 	for _, r := range out.Results {
 		path := filepath.ToSlash(r.Path)
-		fp := strings.TrimSpace(r.Extra.Fingerprint)
-		if fp == "" {
-			fp = Fingerprint(ToolSemgrep, r.CheckID, path, r.Extra.Lines)
-		}
+		// Always compute our own content-based fingerprint. Semgrep's
+		// extra.fingerprint is unreliable when logged out of the registry — it
+		// emits the sentinel "requires login" for every finding, which would
+		// collapse all of them to one on dedup.
+		fp := Fingerprint(ToolSemgrep, r.CheckID, path, r.Extra.Lines)
 		findings = append(findings, Finding{
 			Fingerprint: fp,
 			Tool:        ToolSemgrep,

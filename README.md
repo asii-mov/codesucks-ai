@@ -1,342 +1,106 @@
 # codesucks-ai
 
-AI-powered security analysis tool combining static analysis with intelligent vulnerability detection and automated remediation.
+A simple agentic SAST pipeline. Point it at a GitHub repository and it will:
 
-<img width="1196" height="560" alt="image" src="https://github.com/user-attachments/assets/9e2a280f-aa76-434b-8067-cc7a235f8947" />
-<img width="897" height="871" alt="image" src="https://github.com/user-attachments/assets/2a68284a-0824-42c2-bef6-f79d65aa2ff9" />
+1. **Scan** the code with [Semgrep](https://semgrep.dev) (SAST) and [TruffleHog](https://github.com/trufflesecurity/trufflehog) (secret detection), run in parallel.
+2. **Triage** every finding with Claude to reject false positives.
+3. **Patch** each confirmed vulnerability with Claude.
+4. **Prove** every patch before proposing it — the fix is re-scanned, the code is linted, and the app's tests/build still pass — each measured against a pristine baseline.
+5. **Open one pull request per fix**, stating the vulnerability, severity, CWE, the solution taken, and the exact verification evidence.
 
+One command, one pipeline, no modes, no config files.
 
-## Features
+## Install
 
-- **Three-layer analysis**: SAST (Semgrep via MCP), Secret Detection (TruffleHog), AI Analysis (Claude)
-- **AI Orchestrator**: 5 Claude Code subagents for parallel security analysis
-- **Matrix Build System**: Automatic rule sets
-- **Automated fixes**: Generate and apply security patches via GitHub PRs
-- **Low false positives**: AI-powered context analysis reduces false positives by 15%
-- **Multi-language support**: Java, Python, JavaScript, Go, Ruby, PHP, C/C++, C#
-- **HTML reports**: Reports formatted in HTML
-
-## Quick Start
-
-### Prerequisites
-
-- Go 1.21+
-- Claude Code CLI (for orchestrator mode)
-- Python 3.8+ (for Semgrep MCP server)
-- TruffleHog (optional - for secret scanning, install separately based on your platform)
-- Docker (optional)
-- GitHub Personal Access Token
-- Anthropic API Key
-
-### Installation
+Requires **Go 1.23+** and these tools on your `PATH`: `git`, `semgrep`, `trufflehog`.
 
 ```bash
-git clone https://github.com/your-org/codesucks-ai.git
-cd codesucks-ai
-
-# Install uv for Python virtual environment management
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Build the application
-cd src && make build && cd ..
+go build -o codesucks-ai ./cmd/codesucks-ai
 ```
 
-### Optional: TruffleHog Installation
-
-For secret scanning capabilities, install TruffleHog for your platform:
+## Usage
 
 ```bash
-# macOS (Homebrew)
-brew install trufflesecurity/trufflehog/trufflehog
-
-# Linux/Windows - Download from releases
-# https://github.com/trufflesecurity/trufflehog/releases
-
-# Or install via Go
-go install github.com/trufflesecurity/trufflehog/v3@latest
+codesucks-ai [flags] <github-repo-url>
 ```
 
-The tool will automatically detect if TruffleHog is available and skip secret scanning if not found.
-
-### Setup
-
-Create a `.env` file with your credentials:
+Credentials come from the environment (or a local `.env` file):
 
 ```bash
-# Create .env file
-cat > .env << EOF
-GITHUB_TOKEN=your_github_token_here
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
-EOF
+export GITHUB_TOKEN=github_pat_...      # repo scope: clone, push fix branches, open PRs
+export ANTHROPIC_API_KEY=sk-ant-...     # triage + patch agents
 ```
 
-### Usage
-
-**Simple One-Command Approach:**
+Example — scan a repo, verify fixes, and open up to one PR:
 
 ```bash
-# Basic orchestrator scan (handles all setup automatically)
-./run-orchestrator.sh -r https://github.com/owner/repo
-
-# With MCP integration (auto-setup with uv venv)
-./run-orchestrator.sh -r https://github.com/owner/repo --mcp
-
-# Setup environment only (useful for first-time setup)
-./run-orchestrator.sh --setup-only
-
-# With custom configuration
-./run-orchestrator.sh -r https://github.com/owner/repo -c configs/orchestrator.yaml
+codesucks-ai -max-prs 1 https://github.com/asii-mov/NodeGoat-AI-test
 ```
 
-**Manual Approach (if needed):**
+Preview what it would do without changing anything:
 
 ```bash
-# Basic scan with comprehensive analysis (default)
-./build/codesucks-ai -repo https://github.com/owner/repo
-
-# Quick scan with minimal rules
-./build/codesucks-ai -repo https://github.com/owner/repo -config basic
-
-# AI Orchestrator Mode (5 specialized Claude Code subagents)
-./build/codesucks-ai -repo https://github.com/owner/repo -orchestrator-mode
-
-# Matrix Build Mode (intelligent language/framework detection)
-./build/codesucks-ai -repo https://github.com/owner/repo -matrix-build
-
-# Matrix Build with custom language override
-./build/codesucks-ai -repo https://github.com/owner/repo -matrix-build --force-language python
-
-
-# Manual MCP setup and usage
-uv venv mcp-env
-source mcp-env/bin/activate
-uv pip install semgrep-mcp semgrep
-python -m semgrep_mcp.server &
-./build/codesucks-ai -repo https://github.com/owner/repo -orchestrator-mode -use-mcp-semgrep
+codesucks-ai -dry-run https://github.com/asii-mov/NodeGoat-AI-test
 ```
 
-## Configuration
+### Flags
 
-The tool supports both simple presets and full YAML configuration files. The matrix build system automatically generates optimal configurations based on detected technologies.
+| Flag | Default | Purpose |
+|---|---|---|
+| `-dry-run` | `false` | Scan and triage only — no patches, pushes, or PRs. |
+| `-max-prs` | `10` | Maximum pull requests to open per run. |
+| `-model` | `claude-opus-4-8` | Model for the patch agent. |
+| `-lint-cmd` | (auto) | Override the Gate B lint command. |
+| `-verify-cmd` | (auto) | Override the Gate C test/build command. |
+| `-workdir` | (temp dir) | Where to clone the target. |
+| `-out` | `./out` | Directory for `report.json` and `report.md`. |
 
-### Using Configuration Presets
+That is the entire surface. Everything else is a sensible built-in constant (see below).
 
-```bash
-# Use a simple preset (no file path needed)
-./build/codesucks-ai -repo https://github.com/owner/repo -config basic
-./build/codesucks-ai -repo https://github.com/owner/repo -config comprehensive
-```
+### Built-in constants
 
-### Using Full YAML Configuration
+Deliberately not flags, to keep the tool simple:
 
-Create a YAML config file:
+- Triage model: `claude-haiku-4-5`; triage concurrency: 4; confidence threshold to act: 0.7.
+- Per-finding budget: 12 agent iterations, 200k tokens, 5-minute wall clock.
+- Patch retries on gate failure: 2.
+- Semgrep config: `p/default`.
+- `INFO`-severity findings are skipped, as are vendored/generated paths (`node_modules/`, `vendor/`, `dist/`, `build/`, `*.min.js`, `*_pb.go`, `*.generated.*`).
 
-```yaml
-target:
-  repo: "https://github.com/owner/repo"
+## How verification works
 
-scanning:
-  semgrep:
-    enabled: true
-    config: "comprehensive"
-  trufflehog:
-    enabled: true
-    verify_secrets: true
+A pull request is opened only after all three gates pass, in order. Each is deterministic Go code, never a model judgment:
 
-ai_automation:
-  enabled: true
-  auto_fix: true
-  create_pr: true
+- **Gate A — fix verified.** The finding's scanner is re-run on the changed files. The original finding must be gone (its content-based fingerprint disappears) and no new findings may appear.
+- **Gate B — lint.** The linter runs and must introduce no new issues versus a pristine baseline, so a repo's pre-existing lint noise never blocks a fix.
+- **Gate C — app works.** The repo's tests (or, failing that, build → syntax check) run and must show no new failures versus a pristine baseline. The verification level that ran is recorded in the PR.
 
-orchestrator:
-  enabled: true
-  agents_dir: "./agents"
-  session_dir: "./sessions"
-
-performance:
-  threads: 10
-  output_dir: "./results"
-```
-
-### Configuration Presets
-
-Choose from these optimized configurations:
-
-- **`basic.yaml`** - Quick scan with minimal rules (~2 min)
-- **`comprehensive.yaml`** - Full analysis with all security rules (~10 min) 
-- **`orchestrator.yaml`** - AI deep analysis with 5 parallel agents (~20 min)
-- **`orchestrator-no-autofix.yaml`** - Analysis-only mode without auto-fixes
-- **`batch-processing.yaml`** - Optimized for multiple repository scanning
-- **`matrix-base.yaml`** - Template for matrix build system (auto-generated configs)
-
-## Matrix Build System
-
-The Matrix Build system automatically detects programming languages and frameworks in repositories to apply targeted security analysis. It dynamically generates optimized Semgrep rulesets without requiring hardcoded configuration files.
-
-### Features
-- **Automatic Language Detection**: Analyzes repository composition via GitHub API and file analysis
-- **Framework Detection**: Identifies frameworks like React, Django, Express, Spring Boot from package files
-- **Dynamic Rule Generation**: Automatically selects appropriate Semgrep security rulesets based on detection
-- **Enhanced Coverage**: Finds 2.5x more vulnerabilities compared to generic configurations
-- **No Static Configs**: Matrix configs are generated dynamically - no hardcoded matrix files needed
-- **Configuration Display**: HTML reports show complete matrix configuration with percentages and applied rulesets
-
-### Usage
-
-```bash
-# Basic matrix build (auto-detection)
-./codesucks-ai --matrix-build -repo https://github.com/owner/repo
-
-# Override detected language
-./codesucks-ai --matrix-build --force-language python -repo https://github.com/owner/repo
-
-# Override detected framework
-./codesucks-ai --matrix-build --force-framework django -repo https://github.com/owner/repo
-
-# Custom language threshold
-./codesucks-ai --matrix-build --language-threshold 15.0 -repo https://github.com/owner/repo
-
-# Additional rulesets
-./codesucks-ai --matrix-build --additional-rulesets "p/security-audit,p/owasp-top10" -repo https://github.com/owner/repo
-
-# Disable agent validation for faster scans
-./codesucks-ai --matrix-build --no-agent-validation -repo https://github.com/owner/repo
-```
-
-### Example Results
-- **Multi-language projects**: Archon repository detected Python (55.9%) + TypeScript (41.3%) with Next.js framework
-- **Applied rulesets**: 11 technology-specific security rulesets automatically selected
-- **Vulnerability detection**: 35 security issues found across both technology stacks
-
-## AI Orchestrator Mode
-
-The orchestrator mode uses Claude Code subagents for parallel security analysis. Five specialized security agents analyze different vulnerability classes:
-
-- **Injection Analyzer** - SQL, NoSQL, LDAP, OS command injection
-- **XSS Analyzer** - Cross-site scripting vulnerabilities  
-- **Path Traversal** - Directory traversal and file inclusion
-- **Cryptographic** - Weak algorithms and implementations
-- **Authentication** - Auth bypass and session issues
-
-### Requirements
-
-- Claude Code CLI must be available in PATH
-- Orchestrator mode spawns separate Claude Code processes for each agent
-- Each agent has specialized configurations in `./agents/` directory
-
-### Usage
-
-```bash
-# Basic orchestrator mode
-./build/codesucks-ai -repo https://github.com/owner/repo -orchestrator-mode
-
-# With helper script
-./scripts/run-orchestrator.sh -r https://github.com/owner/repo
-
-# Docker mode  
-./scripts/run-orchestrator.sh -r https://github.com/owner/repo --docker
-```
-
-### 7-Phase Analysis Workflow
-
-1. **Initialize Code Analysis** - Setup session and directories
-2. **Analyze Codebase Structure** - Language detection and file mapping
-3. **Map Entry Points and Data Flow** - Identify input sources and sinks
-4. **Decompose into Parallel Analyses** - Create specialized agent tasks
-5. **Execute Parallel Code Analysis** - Run 5 agents concurrently
-6. **Synthesize and Validate Findings** - Aggregate and validate results
-7. **Generate Code Security Report** - Create comprehensive HTML report with executive summary
-
-### Performance and Cost
-
-**Orchestrator Mode Results (NodeGoat test):**
-- **Total API Cost**: $2.62 for complete analysis
-- **Vulnerabilities Found**: 19+ security issues across all categories
-- **Analysis Time**: ~20 minutes with 5 parallel Claude Code subagents
-- **Cost Breakdown**: Auth ($0.43), XSS ($0.87), Path ($1.32), plus Injection and Crypto analyzers
-- **Cost Efficiency**: ~$0.14 per vulnerability detected with detailed AI analysis and secure fix recommendations
-
-## Docker
-
-```bash
-# Build image
-cd src && make docker-build
-
-# Run container
-docker run -it \
-  -e GITHUB_TOKEN="$GITHUB_TOKEN" \
-  -e ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
-  ghcr.io/your-org/codesucks-ai:latest \
-  -repo https://github.com/owner/repo
-
-# Docker Compose
-docker-compose -f docker/docker-compose.orchestrator.yml up
-```
-
-## CI/CD Integration
-
-### GitHub Actions
-
-```yaml
-name: Security Scan
-on: [pull_request]
-
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: your-org/codesucks-action@v1
-        with:
-          config-file: configs/comprehensive.yaml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-```
+If a gate fails, the failure is fed back to the patch agent for another attempt (up to the retry limit); if it still fails, the finding is abandoned and recorded for human review. Secrets are never printed — every log line, report, and PR body is scrubbed, and secret PRs include a rotation reminder.
 
 ## Development
 
 ```bash
-cd src
-make build      # Build binary
-make test       # Run tests
-make lint       # Run linters
-make clean      # Clean build artifacts
-make all        # Complete pipeline
+go build ./...          # build
+go vet ./...            # vet
+go test ./...           # unit + integration tests
+go test -race ./...     # with the race detector
 ```
 
-### Testing
+Integration tests that need `semgrep`, `trufflehog`, or `node` skip themselves when those tools are absent. The live end-to-end test is opt-in:
 
 ```bash
-# Run unit tests
-cd src && make test
-
-# Test orchestrator
-./scripts/test-orchestrator.sh
-
-# Run example scan
-cd src && make run-example
-
-# Performance benchmarking
-cd src && make benchmark
+E2E=1 go test ./e2e/...   # requires GITHUB_TOKEN + ANTHROPIC_API_KEY; opens a real PR
 ```
 
-## Documentation
+## Layout
 
-- [Orchestrator Mode](docs/ORCHESTRATOR-MODE.md)
-- [Configuration Guide](docs/YAML-CONFIG.md)
-- [Examples](docs/EXAMPLES.md)
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
-
-## Support
-
-- Documentation: [docs/](docs/)
-- Issues: [GitHub Issues](https://github.com/your-org/codesucks-ai/issues)
-- Releases: [GitHub Releases](https://github.com/your-org/codesucks-ai/releases)
-
-## License
-
-GPL-3.0 License - see [LICENSE](LICENSE) file.
-
----
-
-Built for security researchers and developers to identify and remediate vulnerabilities in their codebases.
+```
+cmd/codesucks-ai/   CLI entry point
+internal/scan/      normalized Finding model, fingerprinting, Semgrep + TruffleHog adapters, redactor
+internal/repo/      git operations, path-guarded edit sandbox, GitHub PR creation
+internal/agent/     Anthropic tool-loop, triage + patch agents
+internal/gates/     Gates A/B/C, baselines, stack detection
+internal/pipeline/  orchestration, PR body, run report
+testdata/vuln-app/  intentionally vulnerable fixture app
+e2e/                opt-in live end-to-end test
+```
