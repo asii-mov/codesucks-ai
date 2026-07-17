@@ -1,13 +1,15 @@
 module github.com/asii-mov/codesucks-ai
 
-go 1.24
-
-toolchain go1.24.4
-
-require github.com/google/go-github/v66 v66.0.0
+go 1.25.0
 
 require (
-	github.com/anthropics/anthropic-sdk-go v1.58.0 // indirect
+	github.com/anthropics/anthropic-sdk-go v1.58.0
+	github.com/google/go-github/v66 v66.0.0
+	github.com/joho/godotenv v1.5.1
+	golang.org/x/sync v0.22.0
+)
+
+require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
@@ -19,5 +21,4 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.2 // indirect
-	golang.org/x/sync v0.16.0 // indirect
 )
